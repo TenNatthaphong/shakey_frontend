@@ -14,8 +14,8 @@ class AppColor {
   );
 
   static const Gradient goldGradient = LinearGradient(
-    begin: Alignment(0.7, -1.0),
-    end: Alignment(-1.0, 0.7),
+    begin: Alignment(-2.0, -1.0),
+    end: Alignment(2.0, 1.0),
     colors: [
       Color(0xFFAA8515),
       Color(0xFFFFE678),
@@ -23,7 +23,7 @@ class AppColor {
       Color(0xFFFFE678),
       Color(0xFFAA8515),
     ],
-    stops: [0.0, 0.18, 0.45, 0.72, 1.0],
+    stops: [0.0, 0.15, 0.4, 0.65, 0.9],
   );
 
   static const Gradient couponGradient = LinearGradient(
