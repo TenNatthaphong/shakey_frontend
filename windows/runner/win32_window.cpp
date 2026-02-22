@@ -134,11 +134,32 @@ bool Win32Window::Create(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
+  const DWORD window_style =
+      WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+
+  RECT desired_rect = {0, 0, Scale(size.width, scale_factor),
+                       Scale(size.height, scale_factor)};
+
+  typedef BOOL(WINAPI* AdjustWindowRectExForDpiFunc)(LPRECT, DWORD, BOOL,
+                                                     DWORD, UINT);
+  HMODULE user32 = GetModuleHandleA("user32.dll");
+  auto adjust_for_dpi =
+      user32 == nullptr
+          ? nullptr
+          : reinterpret_cast<AdjustWindowRectExForDpiFunc>(
+                GetProcAddress(user32, "AdjustWindowRectExForDpi"));
+
+  if (adjust_for_dpi != nullptr) {
+    adjust_for_dpi(&desired_rect, window_style, FALSE, 0, dpi);
+  } else {
+    AdjustWindowRectEx(&desired_rect, window_style, FALSE, 0);
+  }
+
   HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
-      Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
-      nullptr, nullptr, GetModuleHandle(nullptr), this);
+      window_class, title.c_str(), window_style, Scale(origin.x, scale_factor),
+      Scale(origin.y, scale_factor), desired_rect.right - desired_rect.left,
+      desired_rect.bottom - desired_rect.top, nullptr, nullptr,
+      GetModuleHandle(nullptr), this);
 
   if (!window) {
     return false;
