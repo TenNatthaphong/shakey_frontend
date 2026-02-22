@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/components/navbar.dart';
-import 'package:shakey/components/topbar.dart';
 import 'package:shakey/pages/home_page.dart';
 import 'package:shakey/pages/menu_page.dart';
 import 'package:shakey/pages/reward_page.dart';
@@ -39,7 +38,7 @@ class _MainLayoutState extends State<MainLayout> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        appBar: TopBar(),
+        extendBody: true,
         body: IndexedStack(index: _currentIndex, children: _pages),
         bottomNavigationBar: NavBar(
           currentIndex: _currentIndex,
