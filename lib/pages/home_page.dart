@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  static const Color _primaryRed = Color(0xFFE62553);
-  static const Color _cream = Color(0xFFF1E3C0);
-  static const Color _softGold = Color(0xFFF6E6B8);
-  static const Color _placeholder = Color(0xFFB7B7B7);
 
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
@@ -51,7 +47,7 @@ class HomePage extends StatelessWidget {
 
   Widget _buildTopPanel(_HomeScale scale) {
     return Container(
-      color: _primaryRed,
+      color: AppColor.primaryRed,
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
         scale.h(18),
@@ -71,7 +67,7 @@ class HomePage extends StatelessWidget {
                       backgroundColor: Colors.white,
                       child: Icon(
                         Icons.person_outline_rounded,
-                        color: _primaryRed,
+                        color: AppColor.primaryRed,
                         size: scale.sp(30),
                       ),
                     ),
@@ -103,7 +99,7 @@ class HomePage extends StatelessWidget {
               ),
               _buildSectionCard(
                 scale: scale,
-                color: _softGold,
+                color: AppColor.softGold,
                 padding: EdgeInsets.symmetric(
                   horizontal: scale.w(12),
                   vertical: scale.h(10),
@@ -114,14 +110,14 @@ class HomePage extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.qr_code_2_rounded,
-                      color: _primaryRed,
+                      color: AppColor.primaryRed,
                       size: scale.sp(22),
                     ),
                     SizedBox(width: scale.w(8)),
                     Text(
                       'Earn Point',
                       style: TextStyle(
-                        color: _primaryRed,
+                        color: AppColor.primaryRed,
                         fontWeight: FontWeight.w700,
                         fontSize: scale.sp(15),
                       ),
@@ -164,7 +160,7 @@ class HomePage extends StatelessWidget {
                       Text(
                         '60 Point',
                         style: TextStyle(
-                          color: _primaryRed,
+                          color: AppColor.primaryRed,
                           fontWeight: FontWeight.w700,
                           fontSize: scale.sp(28),
                           height: 1,
@@ -185,7 +181,7 @@ class HomePage extends StatelessWidget {
                 Text(
                   'Member Card\nManage',
                   style: TextStyle(
-                    color: _primaryRed,
+                    color: AppColor.primaryRed,
                     fontWeight: FontWeight.w700,
                     fontSize: scale.sp(17),
                     height: 1.05,
@@ -203,7 +199,7 @@ class HomePage extends StatelessWidget {
     return Expanded(
       child: _buildSectionCard(
         scale: scale,
-        color: _softGold,
+        color: AppColor.softGold,
         padding: EdgeInsets.symmetric(vertical: scale.h(12)),
         child: Center(
           child: Text(
@@ -227,7 +223,7 @@ class HomePage extends StatelessWidget {
     return Container(
       height: scale.h(height),
       decoration: BoxDecoration(
-        color: _placeholder,
+        color: AppColor.placeholder,
         borderRadius: BorderRadius.circular(scale.r(10)),
         boxShadow: [
           BoxShadow(
@@ -259,7 +255,7 @@ class HomePage extends StatelessWidget {
           return Container(
             width: scale.w(170),
             decoration: BoxDecoration(
-              color: _placeholder,
+              color: AppColor.placeholder,
               borderRadius: BorderRadius.circular(scale.r(10)),
               boxShadow: [
                 BoxShadow(
@@ -277,7 +273,7 @@ class HomePage extends StatelessWidget {
 
   Widget _buildPromoGrid(_HomeScale scale) {
     return Container(
-      color: _cream,
+      color: AppColor.cream,
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
         scale.h(18),
@@ -297,7 +293,7 @@ class HomePage extends StatelessWidget {
         itemBuilder: (_, index) {
           return Container(
             decoration: BoxDecoration(
-              color: _placeholder,
+              color: AppColor.placeholder,
               borderRadius: BorderRadius.circular(scale.r(10)),
               boxShadow: [
                 BoxShadow(
@@ -318,7 +314,7 @@ class HomePage extends StatelessWidget {
     final scale = _HomeScale(context);
 
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: AppColor.cream,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -327,7 +323,7 @@ class HomePage extends StatelessWidget {
               Transform.translate(
                 offset: Offset(0, -scale.h(8)),
                 child: Container(
-                  color: _cream,
+                  color: AppColor.cream,
                   padding: EdgeInsets.fromLTRB(
                     scale.w(10),
                     0,
@@ -346,7 +342,7 @@ class HomePage extends StatelessWidget {
               Transform.translate(
                 offset: Offset(0, -scale.h(8)),
                 child: Container(
-                  color: _cream,
+                  color: AppColor.cream,
                   padding: EdgeInsets.fromLTRB(
                     scale.w(10),
                     scale.h(14),
@@ -360,7 +356,7 @@ class HomePage extends StatelessWidget {
                       Text(
                         'Recent Order',
                         style: TextStyle(
-                          color: _primaryRed,
+                          color: AppColor.primaryRed,
                           fontWeight: FontWeight.w700,
                           fontSize: scale.sp(40),
                         ),
@@ -381,8 +377,8 @@ class HomePage extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: 0,
-        selectedItemColor: _primaryRed,
-        unselectedItemColor: _primaryRed,
+        selectedItemColor: AppColor.primaryRed,
+        unselectedItemColor: AppColor.primaryRed,
         selectedFontSize: scale.sp(15),
         unselectedFontSize: scale.sp(15),
         showUnselectedLabels: true,
