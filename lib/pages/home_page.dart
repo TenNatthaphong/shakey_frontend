@@ -1,25 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
-import 'package:shakey/router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  void _onNavTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, AppRoutes.MenuPage);
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, AppRoutes.RewardPage);
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, AppRoutes.MorePage);
-        break;
-    }
-  }
 
   Widget _buildSectionCard({
     required _HomeScale scale,
@@ -27,17 +10,19 @@ class HomePage extends StatelessWidget {
     EdgeInsetsGeometry? padding,
     double radius = 12,
     Color color = Colors.white,
+    Gradient? gradient,
   }) {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: color,
+        color: gradient == null ? color : null,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(scale.r(radius)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0x30000000),
-            blurRadius: scale.r(7),
-            offset: Offset(0, scale.h(3)),
+            color: const Color(0x1F000000),
+            blurRadius: scale.r(15),
+            offset: Offset(0, scale.h(5)),
           ),
         ],
       ),
@@ -47,7 +32,7 @@ class HomePage extends StatelessWidget {
 
   Widget _buildTopPanel(_HomeScale scale) {
     return Container(
-      color: AppColor.primaryRed,
+      color: Colors.transparent,
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
         scale.h(18),
@@ -79,7 +64,7 @@ class HomePage extends StatelessWidget {
                           'Welcome',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: scale.sp(20),
+                            fontSize: scale.sp(12),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -87,7 +72,7 @@ class HomePage extends StatelessWidget {
                           'Kainui',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: scale.sp(38),
+                            fontSize: scale.sp(20),
                             fontWeight: FontWeight.w800,
                             height: 0.95,
                           ),
@@ -99,7 +84,7 @@ class HomePage extends StatelessWidget {
               ),
               _buildSectionCard(
                 scale: scale,
-                color: AppColor.softGold,
+                gradient: AppColor.backgroundGradient,
                 padding: EdgeInsets.symmetric(
                   horizontal: scale.w(12),
                   vertical: scale.h(10),
@@ -109,7 +94,7 @@ class HomePage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.qr_code_2_rounded,
+                      Icons.qr_code_scanner,
                       color: AppColor.primaryRed,
                       size: scale.sp(22),
                     ),
@@ -119,7 +104,7 @@ class HomePage extends StatelessWidget {
                       style: TextStyle(
                         color: AppColor.primaryRed,
                         fontWeight: FontWeight.w700,
-                        fontSize: scale.sp(15),
+                        fontSize: scale.sp(12),
                       ),
                     ),
                   ],
@@ -138,10 +123,14 @@ class HomePage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.account_circle_rounded,
-                  size: scale.sp(34),
-                  color: const Color(0xFFBE9C2D),
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (Rect bounds) => const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFE5C058), Color(0xFFB1881D)],
+                  ).createShader(bounds),
+                  child: Icon(Icons.person, size: scale.sp(34)),
                 ),
                 SizedBox(width: scale.w(10)),
                 Expanded(
@@ -153,7 +142,7 @@ class HomePage extends StatelessWidget {
                         style: TextStyle(
                           color: const Color(0xFFC5A135),
                           fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(26),
+                          fontSize: scale.sp(12),
                           height: 0.9,
                         ),
                       ),
@@ -162,7 +151,7 @@ class HomePage extends StatelessWidget {
                         style: TextStyle(
                           color: AppColor.primaryRed,
                           fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(28),
+                          fontSize: scale.sp(16),
                           height: 1,
                         ),
                       ),
@@ -170,11 +159,11 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  width: scale.w(70),
-                  height: scale.h(38),
+                  width: scale.w(66),
+                  height: scale.h(41),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD0D0D0),
-                    borderRadius: BorderRadius.circular(scale.r(5)),
+                    borderRadius: BorderRadius.circular(scale.r(4)),
                   ),
                 ),
                 SizedBox(width: scale.w(10)),
@@ -183,7 +172,7 @@ class HomePage extends StatelessWidget {
                   style: TextStyle(
                     color: AppColor.primaryRed,
                     fontWeight: FontWeight.w700,
-                    fontSize: scale.sp(17),
+                    fontSize: scale.sp(12),
                     height: 1.05,
                   ),
                 ),
@@ -199,15 +188,15 @@ class HomePage extends StatelessWidget {
     return Expanded(
       child: _buildSectionCard(
         scale: scale,
-        color: AppColor.softGold,
+        gradient: AppColor.backgroundGradient,
         padding: EdgeInsets.symmetric(vertical: scale.h(12)),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
               color: const Color(0xFF1E1E1E),
-              fontWeight: FontWeight.w500,
-              fontSize: scale.sp(34),
+              fontWeight: FontWeight.w600,
+              fontSize: scale.sp(22),
             ),
           ),
         ),
@@ -223,13 +212,13 @@ class HomePage extends StatelessWidget {
     return Container(
       height: scale.h(height),
       decoration: BoxDecoration(
-        color: AppColor.placeholder,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(scale.r(10)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0x30000000),
-            blurRadius: scale.r(7),
-            offset: Offset(0, scale.h(3)),
+            color: const Color(0x1F000000),
+            blurRadius: scale.r(15),
+            offset: Offset(0, scale.h(5)),
           ),
         ],
       ),
@@ -243,25 +232,26 @@ class HomePage extends StatelessWidget {
 
   Widget _buildRecentOrder(_HomeScale scale) {
     return SizedBox(
-      height: scale.h(225),
+      height: scale.h(240), // Increased height to accommodate shadow
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        primary: false,
-        itemCount: 6,
-        padding: EdgeInsets.symmetric(horizontal: scale.w(2)),
-        separatorBuilder: (_, _) => SizedBox(width: scale.w(10)),
+        clipBehavior: Clip.none,
+        itemCount: 20,
+        padding: EdgeInsets.fromLTRB(scale.w(16), 0, scale.w(16), scale.h(15)),
+        separatorBuilder: (_, _) => SizedBox(width: scale.w(15)),
         itemBuilder: (_, index) {
           return Container(
             width: scale.w(170),
+            margin: EdgeInsets.only(bottom: scale.h(2)),
             decoration: BoxDecoration(
-              color: AppColor.placeholder,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(scale.r(10)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0x30000000),
-                  blurRadius: scale.r(7),
-                  offset: Offset(0, scale.h(3)),
+                  color: const Color(0x1F000000),
+                  blurRadius: scale.r(15),
+                  offset: Offset(0, scale.h(5)),
                 ),
               ],
             ),
@@ -272,8 +262,7 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildPromoGrid(_HomeScale scale) {
-    return Container(
-      color: AppColor.cream,
+    return Padding(
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
         scale.h(18),
@@ -293,13 +282,13 @@ class HomePage extends StatelessWidget {
         itemBuilder: (_, index) {
           return Container(
             decoration: BoxDecoration(
-              color: AppColor.placeholder,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(scale.r(10)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0x30000000),
-                  blurRadius: scale.r(7),
-                  offset: Offset(0, scale.h(3)),
+                  color: const Color(0x1F000000),
+                  blurRadius: scale.r(15),
+                  offset: Offset(0, scale.h(5)),
                 ),
               ],
             ),
@@ -314,96 +303,131 @@ class HomePage extends StatelessWidget {
     final scale = _HomeScale(context);
 
     return Scaffold(
-      backgroundColor: AppColor.cream,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildTopPanel(scale),
-              Transform.translate(
-                offset: Offset(0, -scale.h(8)),
-                child: Container(
-                  color: AppColor.cream,
-                  padding: EdgeInsets.fromLTRB(
-                    scale.w(10),
-                    0,
-                    scale.w(10),
-                    scale.h(14),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildQuickAction(scale, 'Reward'),
-                      SizedBox(width: scale.w(10)),
-                      _buildQuickAction(scale, 'Menu'),
-                    ],
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: AppColor.backgroundGradient,
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ClipPath(
+                  clipper: _TopBgClipper(),
+                  child: Container(
+                    height: scale.h(240), // Increased to pull the curve down
+                    color: AppColor.primaryRed,
                   ),
                 ),
               ),
-              Transform.translate(
-                offset: Offset(0, -scale.h(8)),
-                child: Container(
-                  color: AppColor.cream,
-                  padding: EdgeInsets.fromLTRB(
-                    scale.w(10),
-                    scale.h(14),
-                    scale.w(10),
-                    0,
-                  ),
-                  child: Column(
-                    children: [
-                      _buildPlaceholder(scale, 200),
-                      SizedBox(height: scale.h(18)),
-                      Text(
-                        'Recent Order',
-                        style: TextStyle(
-                          color: AppColor.primaryRed,
-                          fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(40),
-                        ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildTopPanel(scale),
+                  Transform.translate(
+                    offset: Offset(0, -scale.h(8)),
+                    child: Container(
+                      color: Colors.transparent,
+                      padding: EdgeInsets.fromLTRB(
+                        scale.w(10),
+                        0,
+                        scale.w(10),
+                        scale.h(14),
                       ),
-                      SizedBox(height: scale.h(12)),
-                      _buildRecentOrder(scale),
-                      SizedBox(height: scale.h(18)),
-                      _buildPlaceholder(scale, 200),
-                    ],
+                      child: Row(
+                        children: [
+                          _buildQuickAction(scale, 'Reward'),
+                          SizedBox(width: scale.w(10)),
+                          _buildQuickAction(scale, 'Menu'),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  Container(
+                    color: Colors.transparent,
+                    padding: EdgeInsets.only(top: scale.h(6)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: scale.w(10),
+                          ),
+                          child: _buildPlaceholder(scale, 200),
+                        ),
+                        SizedBox(height: scale.h(18)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: scale.w(10),
+                          ),
+                          child: Text(
+                            'Recent Order',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColor.primaryRed,
+                              fontWeight: FontWeight.w700,
+                              fontSize: scale.sp(22),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: scale.h(12)),
+                        _buildRecentOrder(scale),
+                        SizedBox(height: scale.h(18)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: scale.w(10),
+                          ),
+                          child: _buildPlaceholder(scale, 200),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildPromoGrid(scale),
+                ],
               ),
-              _buildPromoGrid(scale),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
-        selectedItemColor: AppColor.primaryRed,
-        unselectedItemColor: AppColor.primaryRed,
-        selectedFontSize: scale.sp(15),
-        unselectedFontSize: scale.sp(15),
-        showUnselectedLabels: true,
-        onTap: (index) => _onNavTap(context, index),
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: scale.sp(26)),
-            label: 'หน้าหลัก',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book, size: scale.sp(26)),
-            label: 'เมนู',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.emoji_events_outlined, size: scale.sp(26)),
-            label: 'รีวอร์ด',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu, size: scale.sp(26)),
-            label: 'เพิ่มเติม',
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _TopBgClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+
+    // Right end point ends at height * 0.58 (just below Member Card)
+    // Left start point is at height * 0.68 (slightly lower than the right end)
+    path.lineTo(0, size.height * 0.68);
+
+    // Exact Bezier mapped from the Figma blueprint proportional bounding box
+    path.cubicTo(
+      size.width * 0.25, // cp1 x (pulls curve up for the first mound)
+      size.height * 0.45, // cp1 y
+      size.width * 0.65, // cp2 x (pulls curve down into the deep trough)
+      size.height * 1.05, // cp2 y
+      size.width, // end x (right edge)
+      size.height * 0.58, // end y (matches Figma's top right anchor)
+    );
+
+    path.lineTo(size.width, 0);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
 }
 
 class _HomeScale {
