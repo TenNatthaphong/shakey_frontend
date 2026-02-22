@@ -84,32 +84,36 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
-              _buildSectionCard(
-                scale: scale,
-                gradient: AppColor.backgroundGradient,
-                padding: EdgeInsets.symmetric(
-                  horizontal: scale.w(12),
-                  vertical: scale.h(10),
-                ),
-                radius: 24,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.qr_code_scanner,
-                      color: AppColor.primaryRed,
-                      size: scale.sp(22),
-                    ),
-                    SizedBox(width: scale.w(8)),
-                    Text(
-                      'Earn Point',
-                      style: TextStyle(
+              SizedBox(
+                width: 120,
+                height: 30,
+                child: _buildSectionCard(
+                  scale: scale,
+                  gradient: AppColor.backgroundGradient,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  radius: 24,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.qr_code_scanner,
                         color: AppColor.primaryRed,
-                        fontWeight: FontWeight.w700,
-                        fontSize: scale.sp(12),
+                        size: scale.sp(22),
                       ),
-                    ),
-                  ],
+                      SizedBox(width: scale.w(8)),
+                      Text(
+                        'Earn Point',
+                        style: TextStyle(
+                          color: AppColor.primaryRed,
+                          fontWeight: FontWeight.w700,
+                          fontSize: scale.sp(12),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -452,7 +456,7 @@ class _HomeScale {
 
   final BuildContext context;
 
-  static const double _designWidth = 393;
+  static const double _designWidth = 390;
   static const double _maxScale = 1.25;
   static const double _minScale = 0.9;
 
