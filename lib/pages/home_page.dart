@@ -131,11 +131,8 @@ class HomePage extends StatelessWidget {
               children: [
                 ShaderMask(
                   blendMode: BlendMode.srcIn,
-                  shaderCallback: (Rect bounds) => const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFE5C058), Color(0xFFB1881D)],
-                  ).createShader(bounds),
+                  shaderCallback: (Rect bounds) =>
+                      AppColor.goldGradient.createShader(bounds),
                   child: Icon(Icons.person, size: scale.sp(34)),
                 ),
                 SizedBox(width: scale.w(10)),
