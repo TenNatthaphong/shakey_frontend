@@ -6,25 +6,25 @@ import 'package:shakey/pages/more_page.dart';
 import 'package:shakey/layout/main_layout.dart';
 
 class AppRoutes {
-  static const HomePage = '/';
-  static const MenuPage = '/menu';
-  static const RewardPage = '/reward';
-  static const MorePage = '/more';
+  static const homePage = '/';
+  static const menuPage = '/menu';
+  static const rewardPage = '/reward';
+  static const morePage = '/more';
 }
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case AppRoutes.HomePage:
+      case AppRoutes.homePage:
         return MaterialPageRoute(builder: (context) => const MainLayout());
 
-      case AppRoutes.MenuPage:
+      case AppRoutes.menuPage:
         return MaterialPageRoute(builder: (context) => const MenuPage());
 
-      case AppRoutes.RewardPage:
+      case AppRoutes.rewardPage:
         return MaterialPageRoute(builder: (context) => const RewardPage());
 
-      case AppRoutes.MorePage:
+      case AppRoutes.morePage:
         return MaterialPageRoute(builder: (context) => const MorePage());
 
       default:
