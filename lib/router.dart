@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shakey/pages/home_page.dart';
 import 'package:shakey/pages/menu_page.dart';
 import 'package:shakey/pages/reward_page.dart';
 import 'package:shakey/pages/more_page.dart';
+
+import 'package:shakey/layout/main_layout.dart';
 
 class AppRoutes {
   static const HomePage = '/';
@@ -15,7 +16,7 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.HomePage:
-        return MaterialPageRoute(builder: (context) => const HomePage());
+        return MaterialPageRoute(builder: (context) => const MainLayout());
 
       case AppRoutes.MenuPage:
         return MaterialPageRoute(builder: (context) => const MenuPage());

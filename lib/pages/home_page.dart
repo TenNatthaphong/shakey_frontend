@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final ValueChanged<int>? onTabSelected;
+
+  const HomePage({super.key, this.onTabSelected});
 
   Widget _buildSectionCard({
     required _HomeScale scale,
@@ -184,19 +186,26 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickAction(_HomeScale scale, String label) {
+  Widget _buildQuickAction(
+    _HomeScale scale,
+    String label, {
+    VoidCallback? onTap,
+  }) {
     return Expanded(
-      child: _buildSectionCard(
-        scale: scale,
-        gradient: AppColor.backgroundGradient,
-        padding: EdgeInsets.symmetric(vertical: scale.h(12)),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: const Color(0xFF1E1E1E),
-              fontWeight: FontWeight.w600,
-              fontSize: scale.sp(22),
+      child: GestureDetector(
+        onTap: onTap,
+        child: _buildSectionCard(
+          scale: scale,
+          gradient: AppColor.backgroundGradient,
+          padding: EdgeInsets.symmetric(vertical: scale.h(12)),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: const Color(0xFF1E1E1E),
+                fontWeight: FontWeight.w600,
+                fontSize: scale.sp(22),
+              ),
             ),
           ),
         ),
@@ -344,9 +353,17 @@ class HomePage extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          _buildQuickAction(scale, 'Reward'),
+                          _buildQuickAction(
+                            scale,
+                            'Reward',
+                            onTap: () => onTabSelected?.call(2),
+                          ),
                           SizedBox(width: scale.w(10)),
-                          _buildQuickAction(scale, 'Menu'),
+                          _buildQuickAction(
+                            scale,
+                            'Menu',
+                            onTap: () => onTabSelected?.call(1),
+                          ),
                         ],
                       ),
                     ),

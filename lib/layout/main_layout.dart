@@ -16,14 +16,18 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   late int _currentIndex;
-
+  late final List<Widget> _pages;
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _pages = [
+      HomePage(onTabSelected: _onNavTap),
+      const MenuPage(),
+      const RewardPage(),
+      const MorePage(),
+    ];
   }
-
-  final _pages = const [HomePage(), MenuPage(), RewardPage(), MorePage()];
 
   void _onNavTap(int index) {
     if (index == _currentIndex) return;
