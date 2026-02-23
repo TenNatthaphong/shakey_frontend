@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
+import 'package:shakey/pages/coupon_detail_page.dart';
+import 'package:shakey/pages/member_card_page.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
@@ -13,11 +15,40 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static const int _bannerCount = 4;
+  // TODO(backend): Replace with banner URLs from API when backend is ready.
   static const List<String> _banners = [
     'assets/images/shakewow banner.png',
     'assets/images/shakewow banner2.png',
     'assets/images/shakewow banner3.png',
     'assets/images/shakewow banner4.png',
+  ];
+  // TODO(backend): Replace with coupon list model from database/API.
+  // Expected fields: title (promo_name), imageAsset (image_url), validUntil (valid_until), points (point_cost), detail/description.
+  static const List<_PromoCoupon> _promoCoupons = [
+    _PromoCoupon(
+      imageAsset: 'assets/images/shakewow banner.png',
+      title: 'Get 35 THB Topping San Pa Tong Sticky Rice Coupon',
+      validUntil: '04 May 2026',
+      points: 5,
+    ),
+    _PromoCoupon(
+      imageAsset: 'assets/images/shakewow banner2.png',
+      title: 'Get 129 THB Cloudy Rocky Road Coupon',
+      validUntil: '31 Mar 2026',
+      points: 9,
+    ),
+    _PromoCoupon(
+      imageAsset: 'assets/images/shakewow banner3.png',
+      title: 'Get 149 THB Mango Boat Coupon',
+      validUntil: '04 May 2026',
+      points: 9,
+    ),
+    _PromoCoupon(
+      imageAsset: 'assets/images/shakewow banner4.png',
+      title: '50% off Iced Lemonade & Iced Lemon Tea',
+      validUntil: '31 Jan 2027',
+      points: 40,
+    ),
   ];
   late final PageController _bannerController;
   Timer? _bannerTimer;
@@ -57,6 +88,137 @@ class _HomePageState extends State<HomePage> {
       nextPage,
       duration: Duration(milliseconds: manual ? 400 : 800),
       curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> _onEarnPointTap() async {
+    final scannedCode = await _showMockQrScanner();
+    if (!mounted || scannedCode == null) return;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text('Scanned QR: $scannedCode'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<String?> _showMockQrScanner() {
+    return showDialog<String>(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1B1B1B),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Mock QR Scanner',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  height: 240,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0E0E0E),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColor.primaryRed, width: 1.2),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(
+                        Icons.qr_code_scanner_rounded,
+                        color: Colors.white54,
+                        size: 90,
+                      ),
+                      Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white70, width: 1.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Demo mode: tap "Scan Success" to simulate QR result',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white38),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO(backend): Replace with scanned payload from real QR scanner integration.
+                          Navigator.of(dialogContext).pop('SHAKEY-EARN-001');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColor.primaryRed,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Scan Success'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _openMemberCardPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const MemberCardPage()),
+    );
+  }
+
+  void _openCouponDetail(_PromoCoupon coupon) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CouponDetailPage(
+          imageAsset: coupon.imageAsset,
+          title: coupon.title,
+          validUntil: coupon.validUntil,
+          points: coupon.points,
+        ),
+      ),
     );
   }
 
@@ -141,32 +303,35 @@ class _HomePageState extends State<HomePage> {
               SizedBox(
                 width: 120,
                 height: 30,
-                child: _buildSectionCard(
-                  scale: scale,
-                  gradient: AppColor.backgroundGradient,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  radius: 24,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.qr_code_scanner,
-                        color: AppColor.primaryRed,
-                        size: scale.sp(22),
-                      ),
-                      SizedBox(width: scale.w(8)),
-                      Text(
-                        'Earn Point',
-                        style: TextStyle(
+                child: GestureDetector(
+                  onTap: _onEarnPointTap,
+                  child: _buildSectionCard(
+                    scale: scale,
+                    gradient: AppColor.backgroundGradient,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    radius: 24,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.qr_code_scanner,
                           color: AppColor.primaryRed,
-                          fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(12),
+                          size: scale.sp(22),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: scale.w(8)),
+                        Text(
+                          'Earn Point',
+                          style: TextStyle(
+                            color: AppColor.primaryRed,
+                            fontWeight: FontWeight.w700,
+                            fontSize: scale.sp(12),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -194,6 +359,7 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // TODO(backend): Replace with membership tier and point balance from API.
                       Text(
                         'Gold',
                         style: TextStyle(
@@ -219,19 +385,41 @@ class _HomePageState extends State<HomePage> {
                   width: scale.w(66),
                   height: scale.h(41),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD0D0D0),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(scale.r(4)),
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
                   ),
                 ),
                 SizedBox(width: scale.w(10)),
-                Text(
-                  'Member Card\nManage',
-                  style: TextStyle(
-                    color: AppColor.primaryRed,
-                    fontWeight: FontWeight.w700,
-                    fontSize: scale.sp(12),
-                    height: 1.05,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // TODO(backend): Replace with member card metadata from API.
+                    Text(
+                      'Member Card',
+                      style: TextStyle(
+                        color: AppColor.primaryRed,
+                        fontWeight: FontWeight.w700,
+                        fontSize: scale.sp(12),
+                        height: 1,
+                      ),
+                    ),
+                    SizedBox(height: scale.h(2)),
+                    GestureDetector(
+                      onTap: _openMemberCardPage,
+                      child: Text(
+                        'Manage',
+                        style: TextStyle(
+                          color: const Color(0xFF3FA9F5),
+                          fontWeight: FontWeight.w700,
+                          fontSize: scale.sp(12),
+                          height: 1,
+                          decoration: TextDecoration.underline,
+                          decorationColor: const Color(0xFF3FA9F5),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -374,7 +562,7 @@ class _HomePageState extends State<HomePage> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white.withOpacity(0.9),
+      color: Colors.white.withValues(alpha: 0.9),
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
@@ -422,40 +610,227 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPromoGrid(_HomeScale scale) {
+  Widget _buildPromoHeader(_HomeScale scale) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
         scale.h(18),
         scale.w(16),
+        scale.h(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Rewards for you',
+              style: TextStyle(
+                color: const Color(0xFF2F3B59),
+                fontWeight: FontWeight.w800,
+                fontSize: scale.sp(24),
+                height: 1,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => widget.onTabSelected?.call(2),
+            child: Text(
+              'See all',
+              style: TextStyle(
+                color: const Color(0xFF4F86D9),
+                fontWeight: FontWeight.w600,
+                fontSize: scale.sp(16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentOrderHeader(_HomeScale scale) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        scale.w(16),
+        scale.h(18),
+        scale.w(16),
+        scale.h(8),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Recent Order',
+          style: TextStyle(
+            color: const Color(0xFF2F3B59),
+            fontWeight: FontWeight.w800,
+            fontSize: scale.sp(24),
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPromoGrid(_HomeScale scale) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        scale.w(16),
+        scale.h(8),
+        scale.w(16),
         scale.h(16),
       ),
       child: GridView.builder(
-        itemCount: 4,
+        itemCount: _promoCoupons.length,
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: scale.w(12),
-          mainAxisSpacing: scale.h(12),
-          childAspectRatio: 0.8,
+          mainAxisSpacing: scale.h(14),
+          mainAxisExtent: scale.h(252),
         ),
         itemBuilder: (_, index) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(scale.r(10)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0x1F000000),
-                  blurRadius: scale.r(15),
-                  offset: Offset(0, scale.h(5)),
-                ),
-              ],
+          final coupon = _promoCoupons[index];
+          return GestureDetector(
+            onTap: () => _openCouponDetail(coupon),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(scale.r(14)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0x17000000),
+                    blurRadius: scale.r(12),
+                    offset: Offset(0, scale.h(3)),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(scale.r(14)),
+                    ),
+                    child: SizedBox(
+                      height: scale.h(128),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(coupon.imageAsset, fit: BoxFit.cover),
+                          Positioned(
+                            top: scale.h(8),
+                            left: scale.w(8),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: scale.w(10),
+                                vertical: scale.h(4),
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.primaryRed.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(scale.r(24)),
+                              ),
+                              child: Text(
+                                'Use at Store',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: scale.sp(10),
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        scale.w(10),
+                        scale.h(8),
+                        scale.w(10),
+                        scale.h(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            coupon.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: const Color(0xFF2F2F34),
+                              fontWeight: FontWeight.w700,
+                              fontSize: scale.sp(12),
+                              height: 1.2,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Valid until',
+                            style: TextStyle(
+                              color: const Color(0xFF8A909C),
+                              fontWeight: FontWeight.w500,
+                              fontSize: scale.sp(10),
+                            ),
+                          ),
+                          SizedBox(height: scale.h(2)),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  coupon.validUntil,
+                                  style: TextStyle(
+                                    color: const Color(0xFF656D7B),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: scale.sp(11),
+                                  ),
+                                ),
+                              ),
+                              _buildCouponPointChip(scale, coupon.points),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildCouponPointChip(_HomeScale scale, int points) {
+    return Row(
+      children: [
+        Container(
+          width: scale.w(18),
+          height: scale.h(18),
+          decoration: const BoxDecoration(
+            color: AppColor.primaryRed,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.star_rounded,
+            color: Colors.white,
+            size: scale.sp(12),
+          ),
+        ),
+        SizedBox(width: scale.w(4)),
+        Text(
+          '$points',
+          style: TextStyle(
+            color: AppColor.primaryRed,
+            fontWeight: FontWeight.w700,
+            fontSize: scale.sp(16),
+            height: 1,
+          ),
+        ),
+      ],
     );
   }
 
@@ -527,43 +902,13 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _buildBannerCarousel(scale),
-                        SizedBox(height: scale.h(18)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: scale.w(10),
-                          ),
-                          child: Text(
-                            'Recent Order',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: AppColor.primaryRed,
-                              fontWeight: FontWeight.w700,
-                              fontSize: scale.sp(22),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: scale.h(18)),
+                        _buildRecentOrderHeader(scale),
+                        SizedBox(height: scale.h(10)),
                         _buildRecentOrder(scale),
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      scale.w(10),
-                      scale.h(18),
-                      scale.w(10),
-                      0,
-                    ),
-                    child: Text(
-                      'Promotion for you',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColor.primaryRed,
-                        fontWeight: FontWeight.w700,
-                        fontSize: scale.sp(22),
-                      ),
-                    ),
-                  ),
+                  _buildPromoHeader(scale),
                   _buildPromoGrid(scale),
                 ],
               ),
@@ -622,4 +967,25 @@ class _HomeScale {
   double h(double value) => value * _ratio;
   double r(double value) => value * _ratio;
   double sp(double value) => value * _ratio;
+}
+
+class _PromoCoupon {
+  // TODO(backend): Replace with generated model/entity once coupon API is integrated.
+  // Map from DB/API fields:
+  // - imageAsset <= image_url
+  // - title <= promo_name
+  // - validUntil <= valid_until
+  // - points <= point_cost
+  // - detail <= description/detail (add this field when backend is ready)
+  const _PromoCoupon({
+    required this.imageAsset,
+    required this.title,
+    required this.validUntil,
+    required this.points,
+  });
+
+  final String imageAsset;
+  final String title;
+  final String validUntil;
+  final int points;
 }
