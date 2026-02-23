@@ -57,7 +57,7 @@ class MorePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      '2234 points',
+                      '60 points',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,

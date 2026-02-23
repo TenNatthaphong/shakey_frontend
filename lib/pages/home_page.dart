@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
 
   const HomePage({super.key, this.onTabSelected});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  static const int _bannerCount = 4;
+  late final PageController _bannerController;
+  int _activeBannerIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _bannerController.dispose();
+    super.dispose();
+  }
+
+  void _changeBannerPage(int delta) {
+    final nextPage = (_activeBannerIndex + delta + _bannerCount) % _bannerCount;
+    _bannerController.animateToPage(
+      nextPage,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
 
   Widget _buildSectionCard({
     required _HomeScale scale,
@@ -220,6 +250,7 @@ class HomePage extends StatelessWidget {
     String text = 'Banner',
   }) {
     return Container(
+      width: scale.w(370),
       height: scale.h(height),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -236,6 +267,100 @@ class HomePage extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(fontSize: scale.sp(40), color: Colors.black87),
+      ),
+    );
+  }
+
+  Widget _buildBannerCarousel(_HomeScale scale) {
+    return Column(
+      children: [
+        SizedBox(
+          height: scale.h(200),
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _bannerController,
+                itemCount: _bannerCount,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() {
+                    _activeBannerIndex = index;
+                  });
+                },
+                itemBuilder: (_, index) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: scale.w(10)),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: _buildPlaceholder(scale, 200, text: 'Banner'),
+                    ),
+                  );
+                },
+              ),
+              Positioned(
+                left: scale.w(16),
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: _buildBannerArrowButton(
+                    scale: scale,
+                    icon: Icons.chevron_left_rounded,
+                    onTap: () => _changeBannerPage(-1),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: scale.w(16),
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: _buildBannerArrowButton(
+                    scale: scale,
+                    icon: Icons.chevron_right_rounded,
+                    onTap: () => _changeBannerPage(1),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: scale.h(10)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_bannerCount, (index) {
+            final isActive = index == _activeBannerIndex;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: EdgeInsets.symmetric(horizontal: scale.w(4)),
+              width: isActive ? scale.w(14) : scale.w(8),
+              height: scale.h(4),
+              decoration: BoxDecoration(
+                color: isActive ? AppColor.primaryRed : const Color(0xFFCFCFCF),
+                borderRadius: BorderRadius.circular(scale.r(2)),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBannerArrowButton({
+    required _HomeScale scale,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white.withOpacity(0.9),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: scale.w(32),
+          height: scale.h(32),
+          child: Icon(icon, color: AppColor.primaryRed, size: scale.sp(20)),
+        ),
       ),
     );
   }
@@ -357,13 +482,13 @@ class HomePage extends StatelessWidget {
                           _buildQuickAction(
                             scale,
                             'Reward',
-                            onTap: () => onTabSelected?.call(2),
+                            onTap: () => widget.onTabSelected?.call(2),
                           ),
                           SizedBox(width: scale.w(10)),
                           _buildQuickAction(
                             scale,
                             'Menu',
-                            onTap: () => onTabSelected?.call(1),
+                            onTap: () => widget.onTabSelected?.call(1),
                           ),
                         ],
                       ),
@@ -375,12 +500,7 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: scale.w(10),
-                          ),
-                          child: _buildPlaceholder(scale, 200),
-                        ),
+                        _buildBannerCarousel(scale),
                         SizedBox(height: scale.h(18)),
                         Padding(
                           padding: EdgeInsets.symmetric(
@@ -396,16 +516,26 @@ class HomePage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(height: scale.h(12)),
-                        _buildRecentOrder(scale),
                         SizedBox(height: scale.h(18)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: scale.w(10),
-                          ),
-                          child: _buildPlaceholder(scale, 200),
-                        ),
+                        _buildRecentOrder(scale),
                       ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      scale.w(10),
+                      scale.h(18),
+                      scale.w(10),
+                      0,
+                    ),
+                    child: Text(
+                      'Promotion for you',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColor.primaryRed,
+                        fontWeight: FontWeight.w700,
+                        fontSize: scale.sp(22),
+                      ),
                     ),
                   ),
                   _buildPromoGrid(scale),

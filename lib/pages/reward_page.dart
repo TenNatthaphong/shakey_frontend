@@ -134,9 +134,9 @@ class RewardPage extends StatelessWidget {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 12,
+                crossAxisSpacing: 10,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.0,
+                mainAxisExtent: 190,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) => Container(
