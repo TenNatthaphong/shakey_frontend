@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 
@@ -12,27 +13,50 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static const int _bannerCount = 4;
+  static const List<String> _banners = [
+    'assets/images/shakewow banner.png',
+    'assets/images/shakewow banner2.png',
+    'assets/images/shakewow banner3.png',
+    'assets/images/shakewow banner4.png',
+  ];
   late final PageController _bannerController;
+  Timer? _bannerTimer;
   int _activeBannerIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _bannerController = PageController();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _bannerTimer?.cancel();
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _changeBannerPage(1);
+    });
   }
 
   @override
   void dispose() {
+    _bannerTimer?.cancel();
     _bannerController.dispose();
     super.dispose();
   }
 
-  void _changeBannerPage(int delta) {
-    final nextPage = (_activeBannerIndex + delta + _bannerCount) % _bannerCount;
+  void _changeBannerPage(int delta, {bool manual = false}) {
+    if (!mounted || !_bannerController.hasClients) return;
+
+    if (manual) _startTimer();
+
+    final int currentPage =
+        _bannerController.page?.round() ?? _activeBannerIndex;
+    final int nextPage = (currentPage + delta + _bannerCount) % _bannerCount;
+
     _bannerController.animateToPage(
       nextPage,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
+      duration: Duration(milliseconds: manual ? 400 : 800),
+      curve: Curves.easeInOut,
     );
   }
 
@@ -244,14 +268,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPlaceholder(
-    _HomeScale scale,
-    double height, {
-    String text = 'Banner',
-  }) {
+  Widget _buildBannerImage(_HomeScale scale, String assetPath) {
     return Container(
       width: scale.w(370),
-      height: scale.h(height),
+      height: scale.h(200),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(scale.r(10)),
@@ -263,10 +283,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(fontSize: scale.sp(40), color: Colors.black87),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(scale.r(10)),
+        child: Image.asset(assetPath, fit: BoxFit.cover),
       ),
     );
   }
@@ -286,13 +305,17 @@ class _HomePageState extends State<HomePage> {
                   setState(() {
                     _activeBannerIndex = index;
                   });
+                  // If swiped manually, reset the timer
+                  _startTimer();
                 },
                 itemBuilder: (_, index) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: scale.w(10)),
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: _buildPlaceholder(scale, 200, text: 'Banner'),
+                  return RepaintBoundary(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: scale.w(10)),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: _buildBannerImage(scale, _banners[index]),
+                      ),
                     ),
                   );
                 },
@@ -305,7 +328,7 @@ class _HomePageState extends State<HomePage> {
                   child: _buildBannerArrowButton(
                     scale: scale,
                     icon: Icons.chevron_left_rounded,
-                    onTap: () => _changeBannerPage(-1),
+                    onTap: () => _changeBannerPage(-1, manual: true),
                   ),
                 ),
               ),
@@ -317,7 +340,7 @@ class _HomePageState extends State<HomePage> {
                   child: _buildBannerArrowButton(
                     scale: scale,
                     icon: Icons.chevron_right_rounded,
-                    onTap: () => _changeBannerPage(1),
+                    onTap: () => _changeBannerPage(1, manual: true),
                   ),
                 ),
               ),
@@ -372,23 +395,26 @@ class _HomePageState extends State<HomePage> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         clipBehavior: Clip.none,
+        cacheExtent: 500, // Pre-render items for smoother scrolling
         itemCount: 20,
         padding: EdgeInsets.fromLTRB(scale.w(16), 0, scale.w(16), scale.h(15)),
         separatorBuilder: (_, _) => SizedBox(width: scale.w(15)),
         itemBuilder: (_, index) {
-          return Container(
-            width: scale.w(170),
-            margin: EdgeInsets.only(bottom: scale.h(2)),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(scale.r(10)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0x1F000000),
-                  blurRadius: scale.r(15),
-                  offset: Offset(0, scale.h(5)),
-                ),
-              ],
+          return RepaintBoundary(
+            child: Container(
+              width: scale.w(170),
+              margin: EdgeInsets.only(bottom: scale.h(2)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(scale.r(10)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0x1F000000),
+                    blurRadius: scale.r(15),
+                    offset: Offset(0, scale.h(5)),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -579,18 +605,18 @@ class _TopBgClipper extends CustomClipper<Path> {
 }
 
 class _HomeScale {
-  _HomeScale(this.context);
+  _HomeScale(this.context)
+    : _ratio = (MediaQuery.sizeOf(context).width / _designWidth).clamp(
+        _minScale,
+        _maxScale,
+      );
 
   final BuildContext context;
+  final double _ratio;
 
   static const double _designWidth = 390;
   static const double _maxScale = 1.25;
   static const double _minScale = 0.9;
-
-  double get _ratio {
-    final width = MediaQuery.sizeOf(context).width;
-    return (width / _designWidth).clamp(_minScale, _maxScale);
-  }
 
   double w(double value) => value * _ratio;
   double h(double value) => value * _ratio;

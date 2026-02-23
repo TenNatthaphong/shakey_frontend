@@ -94,9 +94,11 @@ class _MenuPageState extends State<MenuPage> {
                     padding: const EdgeInsets.only(left: 20),
                     scrollDirection: Axis.horizontal,
                     physics: const AlwaysScrollableScrollPhysics(),
+                    cacheExtent: 500, // Pre-render for smoothness
                     itemCount: _filteredMenus.length,
-                    itemBuilder: (context, index) =>
-                        _buildRecommendedCard(_filteredMenus[index]),
+                    itemBuilder: (context, index) => RepaintBoundary(
+                      child: _buildRecommendedCard(_filteredMenus[index]),
+                    ),
                   ),
                 ),
 
