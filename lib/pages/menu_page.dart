@@ -17,14 +17,18 @@ class _MenuPageState extends State<MenuPage> {
   final CartService _cartService = CartService.instance;
 
   // Option Flags
-  bool isDelivery = true; // true = ส่งทันที, false = รับที่ร้าน
+  bool isDelivery = true; // true = Deliver now, false = Pick up
 
   // Dropdown States
-  String address = 'คอนโด';
-  final List<String> addresses = ['คอนโด', 'ที่ทำงาน', 'เพิ่มที่อยู่ใหม่'];
+  String address = 'Condo';
+  final List<String> addresses = ['Condo', 'Workplace', 'Add new address'];
 
-  String branch = 'สาขาใกล้ฉัน';
-  final List<String> branches = ['สาขาใกล้ฉัน', 'สาขาบางนา', 'สาขาสยาม'];
+  String branch = 'Nearest Branch';
+  final List<String> branches = [
+    'Nearest Branch',
+    'Bangna Branch',
+    'Siam Branch',
+  ];
 
   // Filters State
   String selectedCategory = 'For You';
@@ -215,7 +219,7 @@ class _MenuPageState extends State<MenuPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          isDelivery ? 'ส่งทันที' : 'รับที่ร้าน',
+                          isDelivery ? 'Deliver now' : 'Pick up',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -288,7 +292,7 @@ class _MenuPageState extends State<MenuPage> {
                                 onChanged: (val) =>
                                     setState(() => searchQuery = val),
                                 decoration: const InputDecoration(
-                                  hintText: 'ค้นหา...',
+                                  hintText: 'Search...',
                                   border: InputBorder.none,
                                   contentPadding: EdgeInsets.symmetric(
                                     vertical: 14,
@@ -424,14 +428,14 @@ class _MenuPageState extends State<MenuPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildModeToggleButton(
-                      'ส่งทันที',
+                      'Deliver now',
                       Icons.directions_car,
                       isDelivery,
                       () => setState(() => isDelivery = true),
                     ),
                     const SizedBox(width: 16),
                     _buildModeToggleButton(
-                      'รับที่ร้าน',
+                      'Pick up',
                       Icons.storefront,
                       !isDelivery,
                       () => setState(() => isDelivery = false),

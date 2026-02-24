@@ -10,6 +10,8 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final outerRadius = BorderRadius.circular(36.0);
+
     return SafeArea(
       bottom: true,
       child: Padding(
@@ -20,26 +22,157 @@ class NavBar extends StatelessWidget {
           top: 4.0,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(50.0),
+          borderRadius: outerRadius,
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+            filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
             child: Container(
-              height: 70,
+              height: 72,
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(
-                  alpha: 0.8,
-                ), // Liquid glass style
-                borderRadius: BorderRadius.circular(50.0),
-                border: Border.all(color: AppColor.primaryRed, width: 2.5),
+                borderRadius: outerRadius,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.10),
+                    Colors.white.withValues(alpha: 0.04),
+                  ],
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  width: 0.9,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(-2, -2),
+                  ),
+                ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  _buildNavItem(0, Icons.home_filled, 'หน้าหลัก'),
-                  _buildNavItem(1, Icons.menu_book, 'เมนู'),
-                  _buildNavItem(2, Icons.military_tech, 'รีวอร์ด'),
-                  _buildNavItem(3, Icons.menu, 'เพิ่มเติม'),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: outerRadius,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: outerRadius,
+                          gradient: RadialGradient(
+                            center: const Alignment(-0.92, -0.90),
+                            radius: 0.78,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.22),
+                              Colors.white.withValues(alpha: 0.00),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: outerRadius,
+                          gradient: RadialGradient(
+                            center: const Alignment(0.92, 0.92),
+                            radius: 0.82,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.16),
+                              Colors.white.withValues(alpha: 0.00),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        const itemCount = 4;
+                        final itemWidth = constraints.maxWidth / itemCount;
+                        final selectedWidth =
+                            (itemWidth - 8).clamp(76.0, 92.0).toDouble();
+                        final selectedLeft =
+                            (itemWidth * currentIndex) +
+                            (itemWidth - selectedWidth) / 2;
+
+                        return Stack(
+                          children: [
+                            AnimatedPositioned(
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                              top: 4,
+                              left: selectedLeft,
+                              width: selectedWidth,
+                              height: constraints.maxHeight - 8,
+                              child: IgnorePointer(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: AppColor.primaryRed.withValues(
+                                      alpha: 0.07,
+                                    ),
+                                    borderRadius: BorderRadius.circular(22.0),
+                                    border: Border.all(
+                                      color: AppColor.primaryRed.withValues(
+                                        alpha: 0.20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildNavItem(
+                                    0,
+                                    Icons.home_filled,
+                                    'Home',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildNavItem(
+                                    1,
+                                    Icons.menu_book,
+                                    'Menu',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildNavItem(
+                                    2,
+                                    Icons.military_tech,
+                                    'Rewards',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildNavItem(3, Icons.menu, 'More'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -53,31 +186,33 @@ class NavBar extends StatelessWidget {
     final isSelected = currentIndex == index;
     final color = isSelected
         ? AppColor.primaryRed
-        : AppColor.primaryRed.withValues(alpha: 0.6);
+        : Colors.white.withValues(alpha: 0.96);
 
     return GestureDetector(
       onTap: () => onTap?.call(index),
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 70, // Ensure wide enough for text
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 86),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 20),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 9.5,
+                  height: 1.0,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

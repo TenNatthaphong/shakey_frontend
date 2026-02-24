@@ -948,7 +948,7 @@ class _HomePageState extends State<HomePage> {
                 child: ClipPath(
                   clipper: _TopBgClipper(),
                   child: Container(
-                    height: scale.h(240), // Increased to pull the curve down
+                    height: scale.h(320), // Pull curve lower to Reward/Menu area
                     color: AppColor.primaryRed,
                   ),
                 ),
@@ -956,6 +956,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SafeArea(
+            bottom: false,
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -1017,18 +1018,16 @@ class _TopBgClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path();
 
-    // Right end point ends at height * 0.58 (just below Member Card)
-    // Left start point is at height * 0.68 (slightly lower than the right end)
-    path.lineTo(0, size.height * 0.68);
+    // Lower the curve so the dip aligns around Reward/Menu quick actions.
+    path.lineTo(0, size.height * 0.80);
 
-    // Exact Bezier mapped from the Figma blueprint proportional bounding box
     path.cubicTo(
-      size.width * 0.25, // cp1 x (pulls curve up for the first mound)
-      size.height * 0.45, // cp1 y
-      size.width * 0.65, // cp2 x (pulls curve down into the deep trough)
-      size.height * 1.05, // cp2 y
-      size.width, // end x (right edge)
-      size.height * 0.58, // end y (matches Figma's top right anchor)
+      size.width * 0.26,
+      size.height * 0.55,
+      size.width * 0.66,
+      size.height * 1.18,
+      size.width,
+      size.height * 0.72,
     );
 
     path.lineTo(size.width, 0);

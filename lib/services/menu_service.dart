@@ -32,12 +32,12 @@ class MenuService {
     }
     // Fallback Mock Toppings
     return const [
-      Topping(id: 't1', name: 'ครีมชีส-Cream Cheese (แยก)', price: 30),
-      Topping(id: 't2', name: 'เจลลี่ บุก-Jelly (แยก)', price: 15),
-      Topping(id: 't3', name: 'โยเกิร์ต-Yogurt (แยก)', price: 30),
+      Topping(id: 't1', name: 'Cream Cheese (separate)', price: 30),
+      Topping(id: 't2', name: 'Konjac Jelly (separate)', price: 15),
+      Topping(id: 't3', name: 'Yogurt (separate)', price: 30),
       Topping(
         id: 't4',
-        name: 'เนื้อองุ่น-Fresh Peeled Grapes (แยก)',
+        name: 'Fresh Peeled Grapes (separate)',
         price: 55,
       ),
     ];

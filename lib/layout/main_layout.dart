@@ -42,6 +42,7 @@ class _MainLayoutState extends State<MainLayout> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        extendBody: true,
         body: IndexedStack(index: _currentIndex, children: _pages),
         bottomNavigationBar: NavBar(
           currentIndex: _currentIndex,

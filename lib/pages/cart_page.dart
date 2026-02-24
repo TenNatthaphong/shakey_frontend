@@ -190,5 +190,5 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  String _price(int amount) => '฿$amount';
+  String _price(int amount) => 'THB $amount';
 }

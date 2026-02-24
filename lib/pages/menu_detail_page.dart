@@ -15,14 +15,14 @@ class MenuDetailPage extends StatefulWidget {
 class _MenuDetailPageState extends State<MenuDetailPage> {
   final CartService _cartService = CartService.instance;
   int quantity = 1;
-  String selectedSweetness = 'หวาน 100%';
+  String selectedSweetness = '100% Sweet';
 
   final List<String> sweetnessLevels = [
-    'หวาน 100%',
-    'หวาน 75%',
-    'หวาน 50%',
-    'หวาน 25%',
-    'ไม่หวาน 0%',
+    '100% Sweet',
+    '75% Sweet',
+    '50% Sweet',
+    '25% Sweet',
+    '0% Sweet',
   ];
 
   @override
@@ -56,7 +56,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                     children: [
                       _buildTitleSection(),
                       const Divider(height: 32),
-                      _buildSectionHeader('ระดับความหวาน', 'Pick 1'),
+                      _buildSectionHeader('Sweetness Level', 'Pick 1'),
                       ...sweetnessLevels.map(
                         (s) => _buildRadioItem(
                           s,
