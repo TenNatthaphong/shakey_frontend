@@ -4,6 +4,9 @@ import 'package:shakey/app_color.dart';
 import 'package:shakey/pages/coupon_detail_page.dart';
 import 'package:shakey/pages/member_card_page.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
 
@@ -13,39 +16,10 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeBanner {
-  final String bannerId; // Map to banner_id
-  final String image; // Map to image
-  final bool isAsset;
-
-  const _HomeBanner({
-    required this.bannerId,
-    required this.image,
-    this.isAsset = true,
-  });
-}
+// Simplified banner data structure: just a list of image paths/URLs
 
 class _HomePageState extends State<HomePage> {
-  // TODO(backend): When API is ready, fetch banners and update this list.
-  // Ideally, use a FutureBuilder or a proper state management solution.
-  static const List<_HomeBanner> _banners = [
-    _HomeBanner(
-      bannerId: 'b1a1a1a1-1111-1111-1111-111111111111',
-      image: 'assets/images/shakewow banner.png',
-    ),
-    _HomeBanner(
-      bannerId: 'b2b2b2b2-2222-2222-2222-222222222222',
-      image: 'assets/images/shakewow banner2.png',
-    ),
-    _HomeBanner(
-      bannerId: 'b3b3b3b3-3333-3333-3333-333333333333',
-      image: 'assets/images/shakewow banner3.png',
-    ),
-    _HomeBanner(
-      bannerId: 'b4b4b4b4-4444-4444-4444-444444444444',
-      image: 'assets/images/shakewow banner4.png',
-    ),
-  ];
+  List<String> _banners = [];
 
   int get _bannerCount => _banners.length;
   // TODO(backend): Replace with coupon list model from database/API.
@@ -93,10 +67,39 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _bannerController = PageController();
     _startTimer();
+    _fetchBanners();
+  }
+
+  Future<void> _fetchBanners() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3333/banner'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (mounted && data.isNotEmpty) {
+          setState(() {
+            _banners = data.map((url) => url.toString()).toList();
+            _activeBannerIndex = 0;
+          });
+          // Reset banner timer/controller if necessary
+          if (_bannerController.hasClients) {
+            _bannerController.jumpToPage(0);
+          }
+          _startTimer();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching banners: $e');
+    }
   }
 
   void _startTimer() {
     _bannerTimer?.cancel();
+    // Only start timer if we actually have banners to cycle through
+    if (_bannerCount == 0) return;
+
     _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _changeBannerPage(1);
     });
@@ -110,7 +113,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _changeBannerPage(int delta, {bool manual = false}) {
-    if (!mounted || !_bannerController.hasClients) return;
+    if (!mounted || !_bannerController.hasClients || _bannerCount == 0) return;
 
     if (manual) _startTimer();
 
@@ -494,7 +497,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBannerImage(_HomeScale scale, _HomeBanner banner) {
+  Widget _buildBannerImage(_HomeScale scale, String imagePath) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -509,21 +512,45 @@ class _HomePageState extends State<HomePage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(scale.r(10)),
-        child: banner.isAsset
-            ? Image.asset(banner.image, fit: BoxFit.cover)
-            : Image.network(
-                banner.image,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.broken_image, color: Colors.grey),
-                ),
+        child: Image.network(
+          imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildErrorBanner(),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              color: Colors.grey[200],
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
+            );
+          },
+        ),
       ),
     );
   }
 
+  Widget _buildErrorBanner() {
+    return Container(
+      color: Colors.grey[300],
+      child: const Icon(Icons.broken_image, color: Colors.grey),
+    );
+  }
+
   Widget _buildBannerCarousel(_HomeScale scale) {
+    // If no banners are loaded yet, show a placeholder or nothing
+    if (_bannerCount == 0) {
+      return SizedBox(
+        height: scale.h(200),
+        child: Center(
+          child: CircularProgressIndicator(
+            color: AppColor.primaryRed,
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+
     return Column(
       children: [
         SizedBox(
@@ -542,13 +569,13 @@ class _HomePageState extends State<HomePage> {
                   _startTimer();
                 },
                 itemBuilder: (_, index) {
-                  final banner = _banners[index];
+                  final bannerPath = _banners[index];
                   return RepaintBoundary(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: scale.w(10)),
                       child: Align(
                         alignment: Alignment.center,
-                        child: _buildBannerImage(scale, banner),
+                        child: _buildBannerImage(scale, bannerPath),
                       ),
                     ),
                   );
