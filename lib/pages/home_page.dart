@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/pages/coupon_detail_page.dart';
-import 'package:shakey/pages/member_card_page.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -243,12 +242,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openMemberCardPage() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MemberCardPage()));
-  }
-
   void _openCouponDetail(_PromoCoupon coupon) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -383,84 +376,106 @@ class _HomePageState extends State<HomePage> {
             scale: scale,
             padding: EdgeInsets.fromLTRB(
               scale.w(16),
-              scale.h(12),
-              scale.w(12),
-              scale.h(12),
+              scale.h(16),
+              scale.w(16),
+              scale.h(16),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (Rect bounds) =>
-                      AppColor.goldGradient.createShader(bounds),
-                  child: Icon(Icons.person, size: scale.sp(34)),
-                ),
-                SizedBox(width: scale.w(10)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // TODO(backend): Replace with membership tier and point balance from API.
-                      Text(
-                        'Gold',
-                        style: TextStyle(
-                          color: const Color(0xFFC5A135),
-                          fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(12),
-                          height: 0.9,
-                        ),
-                      ),
-                      Text(
-                        '60 Point',
-                        style: TextStyle(
-                          color: AppColor.primaryRed,
-                          fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(16),
-                          height: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: scale.w(66),
-                  height: scale.h(41),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(scale.r(4)),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                ),
-                SizedBox(width: scale.w(10)),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // TODO(backend): Replace with member card metadata from API.
-                    Text(
-                      'Member Card',
-                      style: TextStyle(
-                        color: AppColor.primaryRed,
-                        fontWeight: FontWeight.w700,
-                        fontSize: scale.sp(12),
-                        height: 1,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Gold Member',
+                          style: TextStyle(
+                            color: const Color(0xFFC5A135),
+                            fontWeight: FontWeight.w700,
+                            fontSize: scale.sp(14),
+                            height: 1,
+                          ),
+                        ),
+                        SizedBox(height: scale.h(4)),
+                        Text(
+                          '60 Points',
+                          style: TextStyle(
+                            color: AppColor.primaryRed,
+                            fontWeight: FontWeight.w800,
+                            fontSize: scale.sp(22),
+                            height: 1,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: scale.h(2)),
                     GestureDetector(
-                      onTap: _openMemberCardPage,
-                      child: Text(
-                        'Manage',
-                        style: TextStyle(
-                          color: const Color(0xFF3FA9F5),
-                          fontWeight: FontWeight.w700,
-                          fontSize: scale.sp(12),
-                          height: 1,
-                          decoration: TextDecoration.underline,
-                          decorationColor: const Color(0xFF3FA9F5),
+                      onTap: () {
+                        // Switch to Reward Tab (index 2)
+                        widget.onTabSelected?.call(2);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: scale.w(14),
+                          vertical: scale.h(6),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.primaryRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(scale.r(20)),
+                        ),
+                        child: Text(
+                          'Privilege',
+                          style: TextStyle(
+                            color: AppColor.primaryRed,
+                            fontWeight: FontWeight.w700,
+                            fontSize: scale.sp(12),
+                          ),
                         ),
                       ),
                     ),
                   ],
+                ),
+                SizedBox(height: scale.h(16)),
+                // Progress Bar
+                Stack(
+                  children: [
+                    Container(
+                      height: scale.h(6),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEEEEE),
+                        borderRadius: BorderRadius.circular(scale.r(3)),
+                      ),
+                    ),
+                    Container(
+                      height: scale.h(6),
+                      width:
+                          (MediaQuery.of(context).size.width - scale.w(64)) *
+                          0.6, // 60% progress
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC5A135),
+                        borderRadius: BorderRadius.circular(scale.r(3)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFFC5A135,
+                            ).withValues(alpha: 0.3),
+                            blurRadius: scale.r(4),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: scale.h(8)),
+                Text(
+                  'Another 40 points to reach Platinum',
+                  style: TextStyle(
+                    fontSize: scale.sp(11),
+                    color: const Color(0xFF8A909C),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),

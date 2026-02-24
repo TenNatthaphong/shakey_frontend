@@ -31,7 +31,7 @@ class CouponDetailPage extends StatelessWidget {
         elevation: 1,
         title: const Text(
           'Coupon Detail',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
       ),
@@ -84,7 +84,7 @@ class CouponDetailPage extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 8,
+                                    fontSize: 11,
                                     height: 1,
                                   ),
                                 ),
@@ -96,7 +96,7 @@ class CouponDetailPage extends StatelessWidget {
                                 style: const TextStyle(
                                   color: Color(0xFF35373C),
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 11,
+                                  fontSize: 16,
                                   height: 1.2,
                                 ),
                               ),
@@ -110,7 +110,7 @@ class CouponDetailPage extends StatelessWidget {
                                           'Use',
                                           style: TextStyle(
                                             color: Color(0xFF9DA1AA),
-                                            fontSize: 9,
+                                            fontSize: 12,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
@@ -137,7 +137,7 @@ class CouponDetailPage extends StatelessWidget {
                                               style: const TextStyle(
                                                 color: AppColor.primaryRed,
                                                 fontWeight: FontWeight.w700,
-                                                fontSize: 19,
+                                                fontSize: 24,
                                                 height: 1,
                                               ),
                                             ),
@@ -158,7 +158,7 @@ class CouponDetailPage extends StatelessWidget {
                                           'Campaign valid until',
                                           style: TextStyle(
                                             color: Color(0xFF9DA1AA),
-                                            fontSize: 9,
+                                            fontSize: 12,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
@@ -167,7 +167,7 @@ class CouponDetailPage extends StatelessWidget {
                                           style: const TextStyle(
                                             color: Color(0xFF35373C),
                                             fontWeight: FontWeight.w500,
-                                            fontSize: 11,
+                                            fontSize: 14,
                                           ),
                                         ),
                                       ],
@@ -200,7 +200,7 @@ class CouponDetailPage extends StatelessWidget {
                             style: TextStyle(
                               color: Color(0xFF35373C),
                               fontWeight: FontWeight.w600,
-                              fontSize: 10,
+                              fontSize: 13,
                             ),
                           ),
                           SizedBox(height: 8),
@@ -208,7 +208,7 @@ class CouponDetailPage extends StatelessWidget {
                             condition,
                             style: TextStyle(
                               color: const Color(0xFF3F434A),
-                              fontSize: 8,
+                              fontSize: 11,
                               height: 1.4,
                             ),
                           ),
@@ -238,7 +238,7 @@ class CouponDetailPage extends StatelessWidget {
                   ),
                   child: const Text(
                     'Redeem Now',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   ),
                 ),
               ),

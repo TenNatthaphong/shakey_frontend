@@ -4,6 +4,9 @@ import 'package:shakey/pages/reward_page.dart';
 import 'package:shakey/pages/more_page.dart';
 import 'package:shakey/pages/login_page.dart';
 import 'package:shakey/pages/register_page.dart';
+import 'package:shakey/pages/menu_detail_page.dart';
+import 'package:shakey/pages/cart_page.dart';
+import 'package:shakey/models/menu.dart';
 
 import 'package:shakey/layout/main_layout.dart';
 
@@ -14,6 +17,8 @@ class AppRoutes {
   static const morePage = '/more';
   static const loginPage = '/login';
   static const registerPage = '/register';
+  static const menuDetailPage = '/menu-detail';
+  static const cartPage = '/cart';
 }
 
 class AppRouter {
@@ -36,6 +41,14 @@ class AppRouter {
 
       case AppRoutes.registerPage:
         return MaterialPageRoute(builder: (context) => const RegisterPage());
+      case AppRoutes.menuDetailPage:
+        final menu = settings.arguments as Menu;
+        return MaterialPageRoute(
+          builder: (context) => MenuDetailPage(menu: menu),
+        );
+
+      case AppRoutes.cartPage:
+        return MaterialPageRoute(builder: (context) => const CartPage());
 
       default:
         return MaterialPageRoute(

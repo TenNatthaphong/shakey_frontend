@@ -56,6 +56,31 @@ class _RewardPageState extends State<RewardPage> {
     ),
   ];
 
+  void _showPrivilegeDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gold Member Privileges'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('• 10% discount on all drinks'),
+            Text('• Birthday special gift'),
+            Text('• Double points on weekends'),
+            Text('• Exclusive early access to new menus'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showRedeemVoucherOverlay() {
     // TODO(backend): Send this code to redeem API when backend is ready.
     final voucherController = TextEditingController();
@@ -353,79 +378,127 @@ class _RewardPageState extends State<RewardPage> {
                     ),
                   ),
                   Positioned(
-                    bottom: 48,
+                    bottom: 40,
                     left: 24,
                     right: 24,
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // TODO(backend): Replace reward summary data with API response.
-                              Text(
-                                'Gold',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                '60 Points',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Point will be expired in\n30 Dec 2026',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _showRedeemVoucherOverlay,
-                            borderRadius: BorderRadius.circular(25),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: AppColor.couponGradient,
-                                borderRadius: BorderRadius.circular(25),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.15),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Gold Member',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
-                                ],
-                              ),
-                              child: const Text(
-                                'Redeem Voucher',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                ),
+                                Text(
+                                  '60 Points',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Material(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              child: InkWell(
+                                onTap: _showPrivilegeDialog,
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  child: const Text(
+                                    'Privilege',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Progress Bar
+                        Stack(
+                          children: [
+                            Container(
+                              height: 8,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            Container(
+                              height: 8,
+                              width:
+                                  MediaQuery.of(context).size.width *
+                                  0.6, // Mock 60% progress
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Another 40 points to reach Platinum',
+                          style: TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                       ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Exclusive Rewards',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2F2F34),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _showRedeemVoucherOverlay,
+                    icon: const Icon(
+                      Icons.confirmation_number_outlined,
+                      size: 18,
+                    ),
+                    label: const Text('Redeem Voucher'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.primaryRed,
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 
@@ -14,159 +16,300 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColor.primaryRed,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableHeight = constraints.maxHeight;
+            final fitScale = (availableHeight / 920).clamp(0.68, 1.0);
+            final topHeight = (230.0 * fitScale).clamp(170.0, 230.0);
+            final imageHeight = (428.0 * fitScale).clamp(338.0, 428.0);
+            final imageTop = (-6.0 * fitScale).clamp(-10.0, -4.0);
+            final imageShiftX = (36.0 * fitScale).clamp(28.0, 36.0);
+            final imageShiftY = (10.0 * fitScale).clamp(6.0, 10.0);
+            final horizontalPadding = (constraints.maxWidth * 0.1).clamp(
+              24.0,
+              40.0,
+            );
+            final titleSize = (26.0 * fitScale).clamp(20.0, 26.0);
+            final labelSize = (12.5 * fitScale).clamp(10.5, 12.5);
+            final termsSize = (11.5 * fitScale).clamp(9.5, 11.5);
+            final fieldFontSize = (14.0 * fitScale).clamp(12.0, 14.0);
+            final fieldHeight = (48.0 * fitScale).clamp(36.0, 48.0);
+            final fieldVerticalPadding = (10.0 * fitScale).clamp(6.0, 10.0);
+            final fieldGap = (7.0 * fitScale).clamp(4.0, 7.0);
+            final sectionGap = (10.0 * fitScale).clamp(6.0, 10.0);
+            final buttonWidth = (165.0 * fitScale).clamp(132.0, 165.0);
+            final buttonHeight = (40.0 * fitScale).clamp(34.0, 40.0);
+            final bottomGap = (6.0 * fitScale).clamp(3.0, 6.0);
+            final checkboxScale = fitScale.clamp(0.78, 1.0);
+
+            return Column(
               children: [
-                // 1. Background top section (cream)
-                Container(height: 340, color: const Color(0xFFFDF7E6)),
-                // 2. Milkshake image (on top of cream)
-                Positioned(
-                  top: 60,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/Strawberry.png',
-                      height: 220,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                // 3. Red section with wave (on top of image)
-                ClipPath(
-                  clipper: _RegisterWaveClipper(),
-                  child: Container(height: 340, color: AppColor.primaryRed),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'REGISTER',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildLabel('Name'),
-                  _buildTextField(hint: 'Name'),
-                  const SizedBox(height: 14),
-                  _buildLabel('Surname'),
-                  _buildTextField(hint: 'Surname'),
-                  const SizedBox(height: 14),
-                  _buildLabel('Tel.'),
-                  _buildTextField(hint: 'Tel.'),
-                  const SizedBox(height: 14),
-                  _buildLabel('Email'),
-                  _buildTextField(hint: 'Email'),
-                  const SizedBox(height: 14),
-                  _buildLabel('Password'),
-                  _buildTextField(hint: 'Password', isPassword: true),
-                  const SizedBox(height: 14),
-                  _buildLabel('Confirm Password'),
-                  _buildTextField(hint: 'Confirm Password', isPassword: true),
-                  const SizedBox(height: 16),
-                  Row(
+                SizedBox(
+                  height: topHeight,
+                  child: Stack(
+                    clipBehavior: Clip.hardEdge,
                     children: [
-                      Checkbox(
-                        value: _acceptTerms,
-                        onChanged: (val) =>
-                            setState(() => _acceptTerms = val ?? false),
-                        side: const BorderSide(color: Colors.white),
-                        checkColor: AppColor.primaryRed,
-                        activeColor: Colors.white,
+                      Container(color: AppColor.primaryRed),
+                      ClipPath(
+                        clipBehavior: Clip.hardEdge,
+                        clipper: _RegisterCreamTopClipper(),
+                        child: Container(color: const Color(0xFFFDF7E6)),
                       ),
-                      const Expanded(
-                        child: Text(
-                          'I accept terms of the agreement',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                      Positioned(
+                        top: imageTop,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Transform.translate(
+                            offset: Offset(imageShiftX, imageShiftY),
+                            child: Transform.rotate(
+                              angle: math.pi / 18,
+                              child: Image.asset(
+                                'assets/images/Strawberry.png',
+                                height: imageHeight,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
+                      ),
+                      ClipPath(
+                        clipBehavior: Clip.hardEdge,
+                        clipper: _RegisterWaveClipper(),
+                        child: Container(color: AppColor.primaryRed),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(height: 3, color: AppColor.primaryRed),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: SizedBox(
-                      width: 180,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _acceptTerms
-                            ? () {
-                                Navigator.of(context).pop();
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColor.primaryRed,
-                          shape: const StadiumBorder(),
-                        ),
-                        child: const Text(
-                          'REGISTER',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Text.rich(
-                        TextSpan(
-                          text: 'Already have an account? ',
-                          style: TextStyle(color: Colors.white, fontSize: 13),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Register',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: sectionGap),
+                        _buildLabel(
+                          'Name',
+                          fontSize: labelSize,
+                          bottomPadding: 2.5 * fitScale,
+                        ),
+                        SizedBox(
+                          height: fieldHeight,
+                          child: _buildTextField(
+                            hint: 'Name',
+                            fontSize: fieldFontSize,
+                            verticalPadding: fieldVerticalPadding,
+                          ),
+                        ),
+                        SizedBox(height: fieldGap),
+                        _buildLabel(
+                          'Surname',
+                          fontSize: labelSize,
+                          bottomPadding: 2.5 * fitScale,
+                        ),
+                        SizedBox(
+                          height: fieldHeight,
+                          child: _buildTextField(
+                            hint: 'Surname',
+                            fontSize: fieldFontSize,
+                            verticalPadding: fieldVerticalPadding,
+                          ),
+                        ),
+                        SizedBox(height: fieldGap),
+                        _buildLabel(
+                          'Tel.',
+                          fontSize: labelSize,
+                          bottomPadding: 2.5 * fitScale,
+                        ),
+                        SizedBox(
+                          height: fieldHeight,
+                          child: _buildTextField(
+                            hint: 'Tel.',
+                            fontSize: fieldFontSize,
+                            verticalPadding: fieldVerticalPadding,
+                          ),
+                        ),
+                        SizedBox(height: fieldGap),
+                        _buildLabel(
+                          'Email',
+                          fontSize: labelSize,
+                          bottomPadding: 2.5 * fitScale,
+                        ),
+                        SizedBox(
+                          height: fieldHeight,
+                          child: _buildTextField(
+                            hint: 'Email',
+                            fontSize: fieldFontSize,
+                            verticalPadding: fieldVerticalPadding,
+                          ),
+                        ),
+                        SizedBox(height: fieldGap),
+                        _buildLabel(
+                          'Password',
+                          fontSize: labelSize,
+                          bottomPadding: 2.5 * fitScale,
+                        ),
+                        SizedBox(
+                          height: fieldHeight,
+                          child: _buildTextField(
+                            hint: 'Password',
+                            isPassword: true,
+                            fontSize: fieldFontSize,
+                            verticalPadding: fieldVerticalPadding,
+                          ),
+                        ),
+                        SizedBox(height: fieldGap),
+                        _buildLabel(
+                          'Confirm Password',
+                          fontSize: labelSize,
+                          bottomPadding: 2.5 * fitScale,
+                        ),
+                        SizedBox(
+                          height: fieldHeight,
+                          child: _buildTextField(
+                            hint: 'Confirm Password',
+                            isPassword: true,
+                            fontSize: fieldFontSize,
+                            verticalPadding: fieldVerticalPadding,
+                          ),
+                        ),
+                        SizedBox(height: sectionGap - 2),
+                        Row(
                           children: [
-                            TextSpan(
-                              text: 'Sign in',
-                              style: TextStyle(
-                                decoration: TextDecoration.underline,
+                            Transform.scale(
+                              scale: checkboxScale,
+                              child: Checkbox(
+                                value: _acceptTerms,
+                                onChanged: (val) =>
+                                    setState(() => _acceptTerms = val ?? false),
+                                side: const BorderSide(color: Colors.white),
+                                checkColor: AppColor.primaryRed,
+                                activeColor: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                'I accept terms of the agreement',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: termsSize,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      ),
+                        SizedBox(height: sectionGap),
+                        Center(
+                          child: SizedBox(
+                            width: buttonWidth,
+                            height: buttonHeight,
+                            child: ElevatedButton(
+                              onPressed: _acceptTerms
+                                  ? () {
+                                      Navigator.of(context).pop();
+                                    }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppColor.primaryRed,
+                                shape: const StadiumBorder(),
+                              ),
+                              child: Text(
+                                'REGISTER',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: (14.0 * fitScale).clamp(11.0, 14.0),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: (8.0 * fitScale).clamp(5.0, 8.0)),
+                        Center(
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Text.rich(
+                              TextSpan(
+                                text: 'Already have an account? ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: (12.0 * fitScale).clamp(10.0, 12.0),
+                                ),
+                                children: const [
+                                  TextSpan(
+                                    text: 'Sign in',
+                                    style: TextStyle(
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: bottomGap),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildLabel(String label) {
+  Widget _buildLabel(
+    String label, {
+    double fontSize = 13,
+    double bottomPadding = 4,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: EdgeInsets.only(bottom: bottomPadding),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 13,
+          fontSize: fontSize,
           fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 
-  Widget _buildTextField({required String hint, bool isPassword = false}) {
+  Widget _buildTextField({
+    required String hint,
+    bool isPassword = false,
+    double fontSize = 14,
+    double verticalPadding = 10,
+  }) {
     return TextField(
       obscureText: isPassword,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.white, fontSize: fontSize),
       decoration: InputDecoration(
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 10,
+        contentPadding: EdgeInsets.symmetric(
+          vertical: verticalPadding,
           horizontal: 16,
         ),
         enabledBorder: OutlineInputBorder(
@@ -175,11 +318,38 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.white, width: 2),
+          borderSide: const BorderSide(color: Colors.white, width: 3),
         ),
       ),
     );
   }
+}
+
+class _RegisterCreamTopClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(0, size.height - 40);
+    path.quadraticBezierTo(
+      size.width / 4,
+      size.height - 90,
+      size.width / 2,
+      size.height - 40,
+    );
+    path.quadraticBezierTo(
+      size.width * 3 / 4,
+      size.height + 10,
+      size.width,
+      size.height - 40,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
 class _RegisterWaveClipper extends CustomClipper<Path> {
