@@ -11,12 +11,14 @@ class CouponDetailPage extends StatelessWidget {
     required this.title,
     required this.validUntil,
     required this.points,
+    required this.condition,
   });
 
   final String imageAsset;
   final String title;
   final String validUntil;
   final int points;
+  final String condition;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,7 @@ class CouponDetailPage extends StatelessWidget {
         elevation: 1,
         title: const Text(
           'Coupon Detail',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
       ),
@@ -73,14 +75,16 @@ class CouponDetailPage extends StatelessWidget {
                                 ),
                                 decoration: const BoxDecoration(
                                   color: AppColor.primaryRed,
-                                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(999),
+                                  ),
                                 ),
                                 child: const Text(
                                   'Use at Store',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 16,
+                                    fontSize: 8,
                                     height: 1,
                                   ),
                                 ),
@@ -92,7 +96,7 @@ class CouponDetailPage extends StatelessWidget {
                                 style: const TextStyle(
                                   color: Color(0xFF35373C),
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 22,
+                                  fontSize: 11,
                                   height: 1.2,
                                 ),
                               ),
@@ -106,12 +110,13 @@ class CouponDetailPage extends StatelessWidget {
                                           'Use',
                                           style: TextStyle(
                                             color: Color(0xFF9DA1AA),
-                                            fontSize: 18,
+                                            fontSize: 9,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Container(
                                               width: 34,
@@ -132,7 +137,7 @@ class CouponDetailPage extends StatelessWidget {
                                               style: const TextStyle(
                                                 color: AppColor.primaryRed,
                                                 fontWeight: FontWeight.w700,
-                                                fontSize: 38,
+                                                fontSize: 19,
                                                 height: 1,
                                               ),
                                             ),
@@ -153,7 +158,7 @@ class CouponDetailPage extends StatelessWidget {
                                           'Campaign valid until',
                                           style: TextStyle(
                                             color: Color(0xFF9DA1AA),
-                                            fontSize: 18,
+                                            fontSize: 9,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
@@ -162,7 +167,7 @@ class CouponDetailPage extends StatelessWidget {
                                           style: const TextStyle(
                                             color: Color(0xFF35373C),
                                             fontWeight: FontWeight.w500,
-                                            fontSize: 22,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ],
@@ -186,7 +191,7 @@ class CouponDetailPage extends StatelessWidget {
                         color: const Color(0xFFEFEFEF),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // TODO(backend): Replace usage conditions with backend CMS/content payload.
@@ -195,20 +200,15 @@ class CouponDetailPage extends StatelessWidget {
                             style: TextStyle(
                               color: Color(0xFF35373C),
                               fontWeight: FontWeight.w600,
-                              fontSize: 20,
+                              fontSize: 10,
                             ),
                           ),
                           SizedBox(height: 8),
                           Text(
-                            '• This coupon is only for Shakey App Members.\n'
-                            '• This coupon is valid from 18 Feb 2026 - 4 May 2026 only.\n'
-                            '• This coupon is valid for 15 minutes after using coupon.\n'
-                            '• This coupon can be used for Dine-in only.\n'
-                            '• Members can check discount coupons in "My Coupons".\n'
-                            '• Please present this coupon before ordering.',
+                            condition,
                             style: TextStyle(
-                              color: Color(0xFF3F434A),
-                              fontSize: 16,
+                              color: const Color(0xFF3F434A),
+                              fontSize: 8,
                               height: 1.4,
                             ),
                           ),
@@ -238,10 +238,7 @@ class CouponDetailPage extends StatelessWidget {
                   ),
                   child: const Text(
                     'Redeem Now',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
                   ),
                 ),
               ),

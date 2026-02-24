@@ -46,7 +46,7 @@ class ShakeyApp extends StatelessWidget {
       ),
       scrollBehavior: AppScrollBehavior(),
       onGenerateRoute: AppRouter.onGenerateRoute,
-      initialRoute: AppRoutes.homePage,
+      initialRoute: AppRoutes.loginPage,
     );
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shakey/pages/menu_page.dart';
 import 'package:shakey/pages/reward_page.dart';
 import 'package:shakey/pages/more_page.dart';
+import 'package:shakey/pages/login_page.dart';
+import 'package:shakey/pages/register_page.dart';
 
 import 'package:shakey/layout/main_layout.dart';
 
@@ -10,6 +12,8 @@ class AppRoutes {
   static const menuPage = '/menu';
   static const rewardPage = '/reward';
   static const morePage = '/more';
+  static const loginPage = '/login';
+  static const registerPage = '/register';
 }
 
 class AppRouter {
@@ -26,6 +30,12 @@ class AppRouter {
 
       case AppRoutes.morePage:
         return MaterialPageRoute(builder: (context) => const MorePage());
+
+      case AppRoutes.loginPage:
+        return MaterialPageRoute(builder: (context) => const LoginPage());
+
+      case AppRoutes.registerPage:
+        return MaterialPageRoute(builder: (context) => const RegisterPage());
 
       default:
         return MaterialPageRoute(

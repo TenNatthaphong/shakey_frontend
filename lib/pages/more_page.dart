@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
+import 'package:shakey/router.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -82,7 +83,15 @@ class MorePage extends StatelessWidget {
                     _buildMenuOption('Help'),
                     _buildMenuOption('FAQ'),
                     _buildMenuOption('Terms and condition'),
-                    _buildMenuOption('Log out'),
+                    _buildMenuOption(
+                      'Log out',
+                      onTap: () {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          AppRoutes.loginPage,
+                          (route) => false,
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -99,19 +108,22 @@ class MorePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuOption(String title) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColor.primaryRed, width: 1),
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+  Widget _buildMenuOption(String title, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColor.primaryRed, width: 1),
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+        ),
       ),
     );
   }

@@ -15,28 +15,44 @@ class _RewardPageState extends State<RewardPage> {
   // Expected fields: title (promo_name), imageAsset (image_url), validUntil (valid_until), points (point_cost), detail/description.
   static const List<_RewardCoupon> _rewardCoupons = [
     _RewardCoupon(
+      rewardId: 'rw-001',
       imageAsset: 'assets/images/shakewow banner.png',
       title: 'Get 35 THB Topping San Pa Tong Sticky Rice Coupon',
       validUntil: '04 May 2026',
       points: 5,
+      condition:
+          '• This coupon is only for Shakey App Members.\n• This coupon is valid from 18 Feb 2026 - 4 May 2026 only.\n• This coupon is valid for 15 minutes after using coupon.\n• This coupon can be used for Dine-in only.',
+      invoke: false,
     ),
     _RewardCoupon(
+      rewardId: 'rw-002',
       imageAsset: 'assets/images/shakewow banner2.png',
       title: 'Get 129 THB Cloudy Rocky Road Coupon',
       validUntil: '31 Mar 2026',
       points: 9,
+      condition:
+          '• Valid for Cloudy Rocky Road only.\n• Cannot be combined with other promotions.\n• Valid until 31 Mar 2026.',
+      invoke: false,
     ),
     _RewardCoupon(
+      rewardId: 'rw-003',
       imageAsset: 'assets/images/shakewow banner3.png',
       title: 'Get 149 THB Mango Boat Coupon',
       validUntil: '04 May 2026',
       points: 9,
+      condition:
+          '• Valid for Mango Boat only.\n• Limited to 1 redemption per member.\n• Valid until 04 May 2026.',
+      invoke: false,
     ),
     _RewardCoupon(
+      rewardId: 'rw-004',
       imageAsset: 'assets/images/shakewow banner4.png',
       title: '50% off Iced Lemonade & Iced Lemon Tea',
       validUntil: '31 Jan 2027',
       points: 40,
+      condition:
+          '• 50% discount on Iced Lemonade or Iced Lemon Tea.\n• Valid at all Shakey branches.\n• Valid until 31 Jan 2027.',
+      invoke: false,
     ),
   ];
 
@@ -109,7 +125,9 @@ class _RewardPageState extends State<RewardPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(6),
-                        borderSide: const BorderSide(color: AppColor.primaryRed),
+                        borderSide: const BorderSide(
+                          color: AppColor.primaryRed,
+                        ),
                       ),
                     ),
                   ),
@@ -149,6 +167,7 @@ class _RewardPageState extends State<RewardPage> {
           title: coupon.title,
           validUntil: coupon.validUntil,
           points: coupon.points,
+          condition: coupon.condition,
         ),
       ),
     );
@@ -173,7 +192,9 @@ class _RewardPageState extends State<RewardPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
               child: SizedBox(
                 height: 128,
                 child: Stack(
@@ -420,13 +441,10 @@ class _RewardPageState extends State<RewardPage> {
                 mainAxisSpacing: 14,
                 mainAxisExtent: 252,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final coupon = _rewardCoupons[index % _rewardCoupons.length];
-                  return _buildRewardCard(coupon);
-                },
-                childCount: _rewardCoupons.length + _extraRewardBoxes,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final coupon = _rewardCoupons[index % _rewardCoupons.length];
+                return _buildRewardCard(coupon);
+              }, childCount: _rewardCoupons.length + _extraRewardBoxes),
             ),
           ),
         ],
@@ -436,21 +454,21 @@ class _RewardPageState extends State<RewardPage> {
 }
 
 class _RewardCoupon {
-  // TODO(backend): Map this model from DB/API fields:
-  // - imageAsset <= image_url
-  // - title <= promo_name
-  // - validUntil <= valid_until
-  // - points <= point_cost
-  // - detail <= description/detail (add this field when backend is ready)
   const _RewardCoupon({
+    required this.rewardId,
     required this.imageAsset,
     required this.title,
     required this.validUntil,
     required this.points,
+    required this.condition,
+    required this.invoke,
   });
 
-  final String imageAsset;
-  final String title;
-  final String validUntil;
-  final int points;
+  final String rewardId; // Map to reward_id
+  final String imageAsset; // Map to image
+  final String title; // Map to header
+  final String validUntil; // Map to exp_date
+  final int points; // Map to require_point
+  final String condition; // Map to condition
+  final bool invoke; // Map to invoke
 }

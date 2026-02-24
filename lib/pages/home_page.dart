@@ -13,15 +13,41 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+class _HomeBanner {
+  final String bannerId; // Map to banner_id
+  final String image; // Map to image
+  final bool isAsset;
+
+  const _HomeBanner({
+    required this.bannerId,
+    required this.image,
+    this.isAsset = true,
+  });
+}
+
 class _HomePageState extends State<HomePage> {
-  static const int _bannerCount = 4;
-  // TODO(backend): Replace with banner URLs from API when backend is ready.
-  static const List<String> _banners = [
-    'assets/images/shakewow banner.png',
-    'assets/images/shakewow banner2.png',
-    'assets/images/shakewow banner3.png',
-    'assets/images/shakewow banner4.png',
+  // TODO(backend): When API is ready, fetch banners and update this list.
+  // Ideally, use a FutureBuilder or a proper state management solution.
+  static const List<_HomeBanner> _banners = [
+    _HomeBanner(
+      bannerId: 'b1a1a1a1-1111-1111-1111-111111111111',
+      image: 'assets/images/shakewow banner.png',
+    ),
+    _HomeBanner(
+      bannerId: 'b2b2b2b2-2222-2222-2222-222222222222',
+      image: 'assets/images/shakewow banner2.png',
+    ),
+    _HomeBanner(
+      bannerId: 'b3b3b3b3-3333-3333-3333-333333333333',
+      image: 'assets/images/shakewow banner3.png',
+    ),
+    _HomeBanner(
+      bannerId: 'b4b4b4b4-4444-4444-4444-444444444444',
+      image: 'assets/images/shakewow banner4.png',
+    ),
   ];
+
+  int get _bannerCount => _banners.length;
   // TODO(backend): Replace with coupon list model from database/API.
   // Expected fields: title (promo_name), imageAsset (image_url), validUntil (valid_until), points (point_cost), detail/description.
   static const List<_PromoCoupon> _promoCoupons = [
@@ -30,24 +56,32 @@ class _HomePageState extends State<HomePage> {
       title: 'Get 35 THB Topping San Pa Tong Sticky Rice Coupon',
       validUntil: '04 May 2026',
       points: 5,
+      condition:
+          '• This coupon is only for Shakey App Members.\n• This coupon is valid from 18 Feb 2026 - 4 May 2026 only.\n• This coupon can be used for Dine-in only.',
     ),
     _PromoCoupon(
       imageAsset: 'assets/images/shakewow banner2.png',
       title: 'Get 129 THB Cloudy Rocky Road Coupon',
       validUntil: '31 Mar 2026',
       points: 9,
+      condition:
+          '• Valid for Cloudy Rocky Road only.\n• Cannot be combined with other promotions.',
     ),
     _PromoCoupon(
       imageAsset: 'assets/images/shakewow banner3.png',
       title: 'Get 149 THB Mango Boat Coupon',
       validUntil: '04 May 2026',
       points: 9,
+      condition:
+          '• Valid for Mango Boat only.\n• Limited to 1 redemption per member.',
     ),
     _PromoCoupon(
       imageAsset: 'assets/images/shakewow banner4.png',
       title: '50% off Iced Lemonade & Iced Lemon Tea',
       validUntil: '31 Jan 2027',
       points: 40,
+      condition:
+          '• 50% discount on Iced Lemonade or Iced Lemon Tea.\n• Valid at all Shakey branches.',
     ),
   ];
   late final PageController _bannerController;
@@ -112,7 +146,10 @@ class _HomePageState extends State<HomePage> {
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
           child: Container(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
             decoration: BoxDecoration(
@@ -204,9 +241,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openMemberCardPage() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const MemberCardPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MemberCardPage()));
   }
 
   void _openCouponDetail(_PromoCoupon coupon) {
@@ -217,6 +254,7 @@ class _HomePageState extends State<HomePage> {
           title: coupon.title,
           validUntil: coupon.validUntil,
           points: coupon.points,
+          condition: coupon.condition,
         ),
       ),
     );
@@ -456,12 +494,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBannerImage(_HomeScale scale, String assetPath) {
+  Widget _buildBannerImage(_HomeScale scale, _HomeBanner banner) {
     return Container(
-      width: scale.w(370),
-      height: scale.h(200),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(scale.r(10)),
         boxShadow: [
           BoxShadow(
@@ -473,7 +509,16 @@ class _HomePageState extends State<HomePage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(scale.r(10)),
-        child: Image.asset(assetPath, fit: BoxFit.cover),
+        child: banner.isAsset
+            ? Image.asset(banner.image, fit: BoxFit.cover)
+            : Image.network(
+                banner.image,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.broken_image, color: Colors.grey),
+                ),
+              ),
       ),
     );
   }
@@ -497,12 +542,13 @@ class _HomePageState extends State<HomePage> {
                   _startTimer();
                 },
                 itemBuilder: (_, index) {
+                  final banner = _banners[index];
                   return RepaintBoundary(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: scale.w(10)),
                       child: Align(
                         alignment: Alignment.center,
-                        child: _buildBannerImage(scale, _banners[index]),
+                        child: _buildBannerImage(scale, banner),
                       ),
                     ),
                   );
@@ -726,8 +772,12 @@ class _HomePageState extends State<HomePage> {
                                 vertical: scale.h(4),
                               ),
                               decoration: BoxDecoration(
-                                color: AppColor.primaryRed.withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(scale.r(24)),
+                                color: AppColor.primaryRed.withValues(
+                                  alpha: 0.9,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  scale.r(24),
+                                ),
                               ),
                               child: Text(
                                 'Use at Store',
@@ -969,23 +1019,19 @@ class _HomeScale {
   double sp(double value) => value * _ratio;
 }
 
+// - detail <= description/detail (add this field when backend is ready)
 class _PromoCoupon {
-  // TODO(backend): Replace with generated model/entity once coupon API is integrated.
-  // Map from DB/API fields:
-  // - imageAsset <= image_url
-  // - title <= promo_name
-  // - validUntil <= valid_until
-  // - points <= point_cost
-  // - detail <= description/detail (add this field when backend is ready)
   const _PromoCoupon({
     required this.imageAsset,
     required this.title,
     required this.validUntil,
     required this.points,
+    required this.condition,
   });
 
   final String imageAsset;
   final String title;
   final String validUntil;
   final int points;
+  final String condition;
 }
