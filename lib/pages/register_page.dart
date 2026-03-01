@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
+import 'package:shakey/services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -11,7 +12,66 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final phoneController = TextEditingController();
+
+  bool _isLoading = false;
+  String? _errorMessage;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _acceptTerms = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_acceptTerms) return;
+
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.register(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        firstname: firstNameController.text.trim(),
+        lastname: lastNameController.text.trim(),
+        phone: phoneController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll("Exception: ", "");
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,179 +155,218 @@ class _RegisterPageState extends State<RegisterPage> {
                     padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Register',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: titleSize,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(height: sectionGap),
-                        _buildLabel(
-                          'Name',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Name',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Surname',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Surname',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Tel.',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Tel.',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Email',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Email',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Password',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Password',
-                            isPassword: true,
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Confirm Password',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Confirm Password',
-                            isPassword: true,
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: sectionGap - 2),
-                        Row(
-                          children: [
-                            Transform.scale(
-                              scale: checkboxScale,
-                              child: Checkbox(
-                                value: _acceptTerms,
-                                onChanged: (val) =>
-                                    setState(() => _acceptTerms = val ?? false),
-                                side: const BorderSide(color: Colors.white),
-                                checkColor: AppColor.primaryRed,
-                                activeColor: Colors.white,
-                              ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Register',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: titleSize,
+                              fontWeight: FontWeight.w900,
                             ),
-                            Expanded(
-                              child: Text(
-                                'I accept terms of the agreement',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: termsSize,
+                          ),
+                          SizedBox(height: sectionGap),
+                          _buildLabel(
+                            'Name',
+                            fontSize: labelSize,
+                            bottomPadding: 2.5 * fitScale,
+                          ),
+                          SizedBox(
+                            height: fieldHeight,
+                            child: _buildTextField(
+                              hint: 'Name',
+                              controller: firstNameController,
+                              fontSize: fieldFontSize,
+                              verticalPadding: fieldVerticalPadding,
+                            ),
+                          ),
+                          SizedBox(height: fieldGap),
+                          _buildLabel(
+                            'Surname',
+                            fontSize: labelSize,
+                            bottomPadding: 2.5 * fitScale,
+                          ),
+                          SizedBox(
+                            height: fieldHeight,
+                            child: _buildTextField(
+                              hint: 'Lastname',
+                              controller: lastNameController,
+                              fontSize: fieldFontSize,
+                              verticalPadding: fieldVerticalPadding,
+                            ),
+                          ),
+                          SizedBox(height: fieldGap),
+                          _buildLabel(
+                            'Tel.',
+                            fontSize: labelSize,
+                            bottomPadding: 2.5 * fitScale,
+                          ),
+                          SizedBox(
+                            height: fieldHeight,
+                            child: _buildTextField(
+                              hint: 'Tel.',
+                              controller: phoneController,
+                              fontSize: fieldFontSize,
+                              verticalPadding: fieldVerticalPadding,
+                            ),
+                          ),
+                          SizedBox(height: fieldGap),
+                          _buildLabel(
+                            'Email',
+                            fontSize: labelSize,
+                            bottomPadding: 2.5 * fitScale,
+                          ),
+                          SizedBox(
+                            height: fieldHeight,
+                            child: _buildTextField(
+                              hint: 'Email',
+                              controller: emailController,
+                              fontSize: fieldFontSize,
+                              verticalPadding: fieldVerticalPadding,
+                            ),
+                          ),
+                          SizedBox(height: fieldGap),
+                          _buildLabel(
+                            'Password',
+                            fontSize: labelSize,
+                            bottomPadding: 2.5 * fitScale,
+                          ),
+                          SizedBox(
+                            height: fieldHeight,
+                            child: _buildTextField(
+                              hint: 'Password',
+                              controller: passwordController,
+                              isPassword: true,
+                              fontSize: fieldFontSize,
+                              verticalPadding: fieldVerticalPadding,
+                            ),
+                          ),
+                          SizedBox(height: fieldGap),
+                          _buildLabel(
+                            'Confirm Password',
+                            fontSize: labelSize,
+                            bottomPadding: 2.5 * fitScale,
+                          ),
+                          SizedBox(
+                            height: fieldHeight,
+                            child: _buildTextField(
+                              hint: 'Confirm Password',
+                              controller: confirmPasswordController,
+                              isPassword: true,
+                              isConfirm: true,
+                              fontSize: fieldFontSize,
+                              verticalPadding: fieldVerticalPadding,
+                            ),
+                          ),
+                          SizedBox(height: sectionGap - 2),
+                          Row(
+                            children: [
+                              Transform.scale(
+                                scale: checkboxScale,
+                                child: Checkbox(
+                                  value: _acceptTerms,
+                                  onChanged: (val) => setState(
+                                    () => _acceptTerms = val ?? false,
+                                  ),
+                                  side: const BorderSide(color: Colors.white),
+                                  checkColor: AppColor.primaryRed,
+                                  activeColor: Colors.white,
                                 ),
                               ),
+                              Expanded(
+                                child: Text(
+                                  'I accept terms of the agreement',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: termsSize,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: sectionGap),
+                          if (_errorMessage != null) ...[
+                            SizedBox(height: 6),
+                            Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.yellow,
+                                fontSize: (12.0 * fitScale).clamp(10.0, 12.0),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
+                            SizedBox(height: sectionGap),
                           ],
-                        ),
-                        SizedBox(height: sectionGap),
-                        Center(
-                          child: SizedBox(
-                            width: buttonWidth,
-                            height: buttonHeight,
-                            child: ElevatedButton(
-                              onPressed: _acceptTerms
-                                  ? () {
-                                      Navigator.of(context).pop();
-                                    }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColor.primaryRed,
-                                shape: const StadiumBorder(),
-                              ),
-                              child: Text(
-                                'REGISTER',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: (14.0 * fitScale).clamp(11.0, 14.0),
+                          Center(
+                            child: SizedBox(
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: ElevatedButton(
+                                onPressed: (_acceptTerms && !_isLoading)
+                                    ? _submit
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColor.primaryRed,
+                                  shape: const StadiumBorder(),
                                 ),
+                                child: _isLoading
+                                    ? SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation(
+                                            AppColor.primaryRed,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        'REGISTER',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: (14.0 * fitScale).clamp(
+                                            11.0,
+                                            14.0,
+                                          ),
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: (8.0 * fitScale).clamp(5.0, 8.0)),
-                        Center(
-                          child: GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: Text.rich(
-                              TextSpan(
-                                text: 'Already have an account? ',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: (12.0 * fitScale).clamp(10.0, 12.0),
-                                ),
-                                children: const [
-                                  TextSpan(
-                                    text: 'Sign in',
-                                    style: TextStyle(
-                                      decoration: TextDecoration.underline,
+                          SizedBox(height: (8.0 * fitScale).clamp(5.0, 8.0)),
+                          Center(
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Text.rich(
+                                TextSpan(
+                                  text: 'Already have an account? ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: (12.0 * fitScale).clamp(
+                                      10.0,
+                                      12.0,
                                     ),
                                   ),
-                                ],
+                                  children: const [
+                                    TextSpan(
+                                      text: 'Sign in',
+                                      style: TextStyle(
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: bottomGap),
-                      ],
+                          SizedBox(height: bottomGap),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -299,12 +398,17 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _buildTextField({
     required String hint,
+    required TextEditingController controller,
     bool isPassword = false,
+    bool isConfirm = false,
     double fontSize = 14,
     double verticalPadding = 10,
   }) {
-    return TextField(
-      obscureText: isPassword,
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword
+          ? (isConfirm ? _obscureConfirmPassword : _obscurePassword)
+          : false,
       style: TextStyle(color: Colors.white, fontSize: fontSize),
       decoration: InputDecoration(
         isDense: true,
@@ -312,6 +416,25 @@ class _RegisterPageState extends State<RegisterPage> {
           vertical: verticalPadding,
           horizontal: 16,
         ),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  (isConfirm ? _obscureConfirmPassword : _obscurePassword)
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (isConfirm) {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    } else {
+                      _obscurePassword = !_obscurePassword;
+                    }
+                  });
+                },
+              )
+            : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white),
@@ -320,6 +443,7 @@ class _RegisterPageState extends State<RegisterPage> {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white, width: 3),
         ),
+        errorStyle: const TextStyle(color: Colors.yellow),
       ),
     );
   }
