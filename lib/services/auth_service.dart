@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
@@ -66,44 +65,16 @@ class AuthService {
     );
   }
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
-
   Future<void> logout() async {
+    print("Logging out...");
     await _storage.deleteAll();
-    await _googleSignIn.signOut();
+    print("Logout complete, storage cleared.");
   }
 
   Future<Map<String, dynamic>> signInWithGoogle() async {
-    try {
-      await _googleSignIn.initialize();
-
-      final googleUser = await _googleSignIn.authenticate();
-
-      final googleAuth = googleUser.authentication;
-
-      final idToken = googleAuth.idToken;
-
-      if (idToken == null) {
-        throw Exception("No idToken received");
-      }
-
-      // ส่งไป backend ด้วย _dio
-      final response = await _dio.post(
-        "/auth/google",
-        data: {"idToken": idToken},
-      );
-
-      return response.data;
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(e.response!.data["message"] ?? "Backend login failed");
-      } else {
-        throw Exception("Connection error");
-      }
-    } catch (e) {
-      print("Google login error: $e");
-      rethrow;
-    }
+    print("Google Sign In requested (dummy)");
+    // Return empty map or mock data as needed
+    return {};
   }
 
   Future<void> register({
