@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../app_color.dart';
-import '../router.dart';
+import 'package:shakey/app_color.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -11,31 +10,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final _firstnameController = TextEditingController();
-  final _lastnameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-
   bool _acceptTerms = false;
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _firstnameController.dispose();
-    _lastnameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _onRegister() async {
-    // Mock registration success
-    Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +115,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: fieldHeight,
                           child: _buildTextField(
                             hint: 'Name',
-                            controller: _firstnameController,
                             fontSize: fieldFontSize,
                             verticalPadding: fieldVerticalPadding,
                           ),
@@ -155,7 +129,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: fieldHeight,
                           child: _buildTextField(
                             hint: 'Surname',
-                            controller: _lastnameController,
                             fontSize: fieldFontSize,
                             verticalPadding: fieldVerticalPadding,
                           ),
@@ -170,7 +143,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: fieldHeight,
                           child: _buildTextField(
                             hint: 'Tel.',
-                            controller: _phoneController,
                             fontSize: fieldFontSize,
                             verticalPadding: fieldVerticalPadding,
                           ),
@@ -185,7 +157,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: fieldHeight,
                           child: _buildTextField(
                             hint: 'Email',
-                            controller: _emailController,
                             fontSize: fieldFontSize,
                             verticalPadding: fieldVerticalPadding,
                           ),
@@ -200,7 +171,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: fieldHeight,
                           child: _buildTextField(
                             hint: 'Password',
-                            controller: _passwordController,
                             isPassword: true,
                             fontSize: fieldFontSize,
                             verticalPadding: fieldVerticalPadding,
@@ -216,7 +186,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: fieldHeight,
                           child: _buildTextField(
                             hint: 'Confirm Password',
-                            controller: _confirmPasswordController,
                             isPassword: true,
                             fontSize: fieldFontSize,
                             verticalPadding: fieldVerticalPadding,
@@ -253,33 +222,23 @@ class _RegisterPageState extends State<RegisterPage> {
                             width: buttonWidth,
                             height: buttonHeight,
                             child: ElevatedButton(
-                              onPressed: (_isLoading || !_acceptTerms)
-                                  ? null
-                                  : _onRegister,
+                              onPressed: _acceptTerms
+                                  ? () {
+                                      Navigator.of(context).pop();
+                                    }
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: AppColor.primaryRed,
                                 shape: const StadiumBorder(),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppColor.primaryRed,
-                                      ),
-                                    )
-                                  : Text(
-                                      'REGISTER',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: (14.0 * fitScale).clamp(
-                                          11.0,
-                                          14.0,
-                                        ),
-                                      ),
-                                    ),
+                              child: Text(
+                                'REGISTER',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: (14.0 * fitScale).clamp(11.0, 14.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -341,11 +300,11 @@ class _RegisterPageState extends State<RegisterPage> {
     required String hint,
     required TextEditingController controller,
     bool isPassword = false,
+    bool isConfirm = false,
     double fontSize = 14,
     double verticalPadding = 10,
   }) {
     return TextField(
-      controller: controller,
       obscureText: isPassword,
       style: TextStyle(color: Colors.white, fontSize: fontSize),
       decoration: InputDecoration(
@@ -354,6 +313,25 @@ class _RegisterPageState extends State<RegisterPage> {
           vertical: verticalPadding,
           horizontal: 16,
         ),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  (isConfirm ? _obscureConfirmPassword : _obscurePassword)
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (isConfirm) {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    } else {
+                      _obscurePassword = !_obscurePassword;
+                    }
+                  });
+                },
+              )
+            : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white),
@@ -362,6 +340,7 @@ class _RegisterPageState extends State<RegisterPage> {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white, width: 3),
         ),
+        errorStyle: const TextStyle(color: Colors.yellow),
       ),
     );
   }

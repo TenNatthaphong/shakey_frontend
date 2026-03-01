@@ -1,8 +1,7 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import '../app_color.dart';
-import '../router.dart';
+import 'package:shakey/app_color.dart';
+import 'package:shakey/router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,9 +11,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  String? _errorMessage;
+  bool _obscurePassword = true;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,8 +25,8 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    // Mock login success
+  void _onLogin() {
+    // Navigate to Home (MainLayout)
     Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
   }
 
@@ -164,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(
                               height: 48,
                               child: ElevatedButton(
-                                onPressed: _handleLogin,
+                                onPressed: _onLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
                                   foregroundColor: AppColor.primaryRed,
@@ -172,22 +174,13 @@ class _LoginPageState extends State<LoginPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: AppColor.primaryRed,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'LOGIN',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                child: const Text(
+                                  'LOGIN',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -275,31 +268,39 @@ class _LoginPageState extends State<LoginPage> {
     required IconData icon,
     bool isPassword = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white, size: 20),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 16,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.white, width: 2),
-          ),
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword ? _obscurePassword : false,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: Colors.white, size: 20),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              )
+            : null,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.white),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.white, width: 2),
+        ),
+        errorStyle: const TextStyle(color: Colors.yellow),
       ),
     );
   }
@@ -339,70 +340,4 @@ class _LoginWaveClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-class _GoogleLogoIcon extends StatelessWidget {
-  const _GoogleLogoIcon({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(painter: _GoogleLogoPainter()),
-    );
-  }
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stroke = size.width * 0.18;
-    final rect = Rect.fromLTWH(
-      stroke / 2,
-      stroke / 2,
-      size.width - stroke,
-      size.height - stroke,
-    );
-
-    void drawArc(Color color, double startDeg, double sweepDeg) {
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.butt
-        ..color = color;
-      canvas.drawArc(
-        rect,
-        startDeg * 3.141592653589793 / 180,
-        sweepDeg * 3.141592653589793 / 180,
-        false,
-        paint,
-      );
-    }
-
-    drawArc(const Color(0xFFEA4335), -40, 85); // red
-    drawArc(const Color(0xFFFBBC05), 45, 85); // yellow
-    drawArc(const Color(0xFF34A853), 130, 85); // green
-    drawArc(const Color(0xFF4285F4), 215, 105); // blue
-
-    final barPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = const Color(0xFF4285F4);
-    final barHeight = stroke * 0.9;
-    final barRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        size.width * 0.52,
-        size.height * 0.5 - barHeight / 2,
-        size.width * 0.32,
-        barHeight,
-      ),
-      Radius.circular(barHeight / 2),
-    );
-    canvas.drawRRect(barRect, barPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

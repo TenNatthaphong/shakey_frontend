@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
+import 'package:shakey/services/auth_service.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -85,11 +86,14 @@ class MorePage extends StatelessWidget {
                     _buildMenuOption('Terms and condition'),
                     _buildMenuOption(
                       'Log out',
-                      onTap: () {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          AppRoutes.loginPage,
-                          (route) => false,
-                        );
+                      onTap: () async {
+                        await AuthService().logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRoutes.loginPage,
+                            (route) => false,
+                          );
+                        }
                       },
                     ),
                   ],
