@@ -2,8 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
-import 'package:shakey/services/auth_service.dart';
-import 'package:shakey/widgets/google_sign_in_button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,11 +39,6 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final result = await AuthService().login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
       if (!mounted) return;
 
       Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
@@ -313,10 +306,12 @@ class _LoginPageState extends State<LoginPage> {
                               SizedBox(height: sectionGap),
                               SizedBox(
                                 height: 48,
-                                child: buildGoogleSignInButton(
+                                child: ElevatedButton.icon(
                                   onPressed: () {
                                     print("Google Sign In");
                                   },
+                                  label: const Text('Google'),
+                                  icon: const Icon(Icons.g_mobiledata),
                                 ),
                               ),
                               SizedBox(height: bottomGap),
