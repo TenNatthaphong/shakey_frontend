@@ -298,9 +298,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _buildTextField({
     required String hint,
-    required TextEditingController controller,
     bool isPassword = false,
-    bool isConfirm = false,
     double fontSize = 14,
     double verticalPadding = 10,
   }) {
@@ -308,30 +306,13 @@ class _RegisterPageState extends State<RegisterPage> {
       obscureText: isPassword,
       style: TextStyle(color: Colors.white, fontSize: fontSize),
       decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.white54, fontSize: fontSize),
         isDense: true,
         contentPadding: EdgeInsets.symmetric(
           vertical: verticalPadding,
           horizontal: 16,
         ),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  (isConfirm ? _obscureConfirmPassword : _obscurePassword)
-                      ? Icons.visibility_off
-                      : Icons.visibility,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  setState(() {
-                    if (isConfirm) {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                    } else {
-                      _obscurePassword = !_obscurePassword;
-                    }
-                  });
-                },
-              )
-            : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white),
@@ -340,7 +321,6 @@ class _RegisterPageState extends State<RegisterPage> {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white, width: 3),
         ),
-        errorStyle: const TextStyle(color: Colors.yellow),
       ),
     );
   }
