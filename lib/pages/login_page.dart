@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
+import 'package:shakey/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,6 +40,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      final result = await AuthService().login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
       if (!mounted) return;
 
       Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
