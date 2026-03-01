@@ -1,8 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static final Map<String, String> _demoStorage = <String, String>{};
   late final Dio _dio;
 
   AuthService() {
@@ -17,7 +16,7 @@ class AuthService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final accessToken = await _storage.read(key: "access_token");
+          final accessToken = _demoStorage["access_token"];
           if (accessToken != null) {
             options.headers["Authorization"] = "Bearer $accessToken";
           }
@@ -25,7 +24,7 @@ class AuthService {
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            final refreshToken = await _storage.read(key: "refresh_token");
+            final refreshToken = _demoStorage["refresh_token"];
             if (refreshToken != null) {
               try {
                 // Try to refresh token
@@ -39,14 +38,12 @@ class AuthService {
                 final newAccessToken = refreshResponse.data["access_token"];
                 final newRefreshToken = refreshResponse.data["refresh_token"];
 
-                await _storage.write(
-                  key: "access_token",
-                  value: newAccessToken,
-                );
-                await _storage.write(
-                  key: "refresh_token",
-                  value: newRefreshToken,
-                );
+                if (newAccessToken is String) {
+                  _demoStorage["access_token"] = newAccessToken;
+                }
+                if (newRefreshToken is String) {
+                  _demoStorage["refresh_token"] = newRefreshToken;
+                }
 
                 // Retry original request
                 e.requestOptions.headers["Authorization"] =
@@ -67,7 +64,7 @@ class AuthService {
 
   Future<void> logout() async {
     print("Logging out...");
-    await _storage.deleteAll();
+    _demoStorage.clear();
     print("Logout complete, storage cleared.");
   }
 
@@ -113,6 +110,18 @@ class AuthService {
         "/auth/login",
         data: {"email": email, "password": password},
       );
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final accessToken = data["access_token"];
+        final refreshToken = data["refresh_token"];
+        if (accessToken is String) {
+          _demoStorage["access_token"] = accessToken;
+        }
+        if (refreshToken is String) {
+          _demoStorage["refresh_token"] = refreshToken;
+        }
+      }
 
       return response.data;
     } on DioException catch (e) {
