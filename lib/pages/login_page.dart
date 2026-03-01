@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:shakey/app_color.dart';
-import 'package:shakey/router.dart';
+import '../app_color.dart';
+import '../router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +14,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,8 +23,8 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _onLogin() {
-    // Navigate to Home (MainLayout)
+  Future<void> _handleLogin() async {
+    // Mock login success
     Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
   }
 
@@ -163,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(
                               height: 48,
                               child: ElevatedButton(
-                                onPressed: _onLogin,
+                                onPressed: _handleLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
                                   foregroundColor: AppColor.primaryRed,
@@ -171,13 +172,22 @@ class _LoginPageState extends State<LoginPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                child: const Text(
-                                  'LOGIN',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColor.primaryRed,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'LOGIN',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                        ),
+                                      ),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -231,12 +241,12 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(height: sectionGap),
                             SizedBox(
                               height: 48,
-                            child: ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const _GoogleLogoIcon(size: 20),
-                              label: const Text('Google'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                              child: ElevatedButton.icon(
+                                onPressed: () {},
+                                icon: const _GoogleLogoIcon(size: 20),
+                                label: const Text('Google'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
                                   foregroundColor: Colors.black87,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),

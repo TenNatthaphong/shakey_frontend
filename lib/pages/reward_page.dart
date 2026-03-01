@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
+import 'package:shakey/models/menu.dart';
 import 'package:shakey/pages/coupon_detail_page.dart';
+import 'package:shakey/services/menu_service.dart';
 
 class RewardPage extends StatefulWidget {
   const RewardPage({super.key});
@@ -9,52 +11,49 @@ class RewardPage extends StatefulWidget {
   State<RewardPage> createState() => _RewardPageState();
 }
 
-class _RewardPageState extends State<RewardPage> {
-  static const int _extraRewardBoxes = 6;
-  // TODO(backend): Replace with reward/coupon list from database/API.
-  // Expected fields: title (promo_name), imageAsset (image_url), validUntil (valid_until), points (point_cost), detail/description.
-  static const List<_RewardCoupon> _rewardCoupons = [
-    _RewardCoupon(
-      rewardId: 'rw-001',
-      imageAsset: 'assets/images/shakewow banner.png',
-      title: 'Get 35 THB Topping San Pa Tong Sticky Rice Coupon',
-      validUntil: '04 May 2026',
-      points: 5,
-      condition:
-          '• This coupon is only for Shakey App Members.\n• This coupon is valid from 18 Feb 2026 - 4 May 2026 only.\n• This coupon is valid for 15 minutes after using coupon.\n• This coupon can be used for Dine-in only.',
-      invoke: false,
-    ),
-    _RewardCoupon(
-      rewardId: 'rw-002',
-      imageAsset: 'assets/images/shakewow banner2.png',
-      title: 'Get 129 THB Cloudy Rocky Road Coupon',
-      validUntil: '31 Mar 2026',
-      points: 9,
-      condition:
-          '• Valid for Cloudy Rocky Road only.\n• Cannot be combined with other promotions.\n• Valid until 31 Mar 2026.',
-      invoke: false,
-    ),
-    _RewardCoupon(
-      rewardId: 'rw-003',
-      imageAsset: 'assets/images/shakewow banner3.png',
-      title: 'Get 149 THB Mango Boat Coupon',
-      validUntil: '04 May 2026',
-      points: 9,
-      condition:
-          '• Valid for Mango Boat only.\n• Limited to 1 redemption per member.\n• Valid until 04 May 2026.',
-      invoke: false,
-    ),
-    _RewardCoupon(
-      rewardId: 'rw-004',
-      imageAsset: 'assets/images/shakewow banner4.png',
-      title: '50% off Iced Lemonade & Iced Lemon Tea',
-      validUntil: '31 Jan 2027',
-      points: 40,
-      condition:
-          '• 50% discount on Iced Lemonade or Iced Lemon Tea.\n• Valid at all Shakey branches.\n• Valid until 31 Jan 2027.',
-      invoke: false,
-    ),
-  ];
+class _RewardPageState extends State<RewardPage>
+    with SingleTickerProviderStateMixin {
+  final MenuService _menuService = MenuService();
+  late TabController _tabController;
+
+  List<MenuReward> _availableRewards = [];
+  List<UserReward> _myRewards = [];
+  bool _isLoading = true;
+  int _userPoints = 60; // Mock points, should be from User API
+
+  // Mock User ID for testing - Replace with real Auth ID when available
+  static const String _mockUserId = '00000000-0000-0000-0000-000000000000';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() => _isLoading = true);
+    try {
+      final available = await _menuService.getRewardList();
+      final myRewards = await _menuService.getUserRewards(_mockUserId);
+
+      if (mounted) {
+        setState(() {
+          _availableRewards = available;
+          _myRewards = myRewards;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   void _showPrivilegeDialog() {
     showDialog<void>(
@@ -81,221 +80,263 @@ class _RewardPageState extends State<RewardPage> {
     );
   }
 
-  void _showRedeemVoucherOverlay() {
-    // TODO(backend): Send this code to redeem API when backend is ready.
-    final voucherController = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 26),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8EFD8),
-              border: Border.all(color: Colors.black, width: 2),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Redeem voucher',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColor.primaryRed,
-                    fontSize: 44,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x3D000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: voucherController,
-                    style: const TextStyle(fontSize: 16, color: Colors.black87),
-                    decoration: InputDecoration(
-                      hintText: 'Enter code here...',
-                      hintStyle: const TextStyle(
-                        color: Color(0xFFB1B1B1),
-                        fontSize: 12,
-                      ),
-                      isDense: true,
-                      filled: true,
-                      fillColor: const Color(0xFFDDDDDD),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: const BorderSide(color: Color(0xFF9D9D9D)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: const BorderSide(color: Color(0xFF9D9D9D)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: const BorderSide(
-                          color: AppColor.primaryRed,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 24,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.primaryRed,
-                      foregroundColor: Colors.white,
-                      shape: const StadiumBorder(),
-                      elevation: 8,
-                      shadowColor: const Color(0x61000000),
-                      textStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    child: const Text('Redeem'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    ).then((_) => voucherController.dispose());
-  }
-
-  void _openCouponDetail(_RewardCoupon coupon) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CouponDetailPage(
-          imageAsset: coupon.imageAsset,
-          title: coupon.title,
-          validUntil: coupon.validUntil,
-          points: coupon.points,
-          condition: coupon.condition,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF7E6),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          _buildPointHeader(),
+          _buildTabBar(),
+        ],
+        body: TabBarView(
+          controller: _tabController,
+          children: [_buildRewardCards(), _buildMyRewards()],
         ),
       ),
     );
   }
 
-  Widget _buildRewardCard(_RewardCoupon coupon) {
+  Widget _buildPointHeader() {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 30),
+        decoration: const BoxDecoration(
+          gradient: AppColor.goldGradient,
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(36),
+            bottomRight: Radius.circular(36),
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Gold Member',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                    Text(
+                      '$_userPoints Points',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: _showPrivilegeDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  child: const Text('Privilege'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: _userPoints / 100,
+              backgroundColor: Colors.white.withOpacity(0.3),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Another 40 points to reach Platinum',
+                style: TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _SliverAppBarDelegate(
+        Container(
+          color: const Color(0xFFFFF7E6),
+          child: TabBar(
+            controller: _tabController,
+            labelColor: AppColor.primaryRed,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: AppColor.primaryRed,
+            indicatorSize: TabBarIndicatorSize.label,
+            tabs: const [
+              Tab(text: 'Available'),
+              Tab(text: 'My Rewards'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRewardCards() {
+    if (_isLoading)
+      return const Center(
+        child: CircularProgressIndicator(color: AppColor.primaryRed),
+      );
+    if (_availableRewards.isEmpty)
+      return const Center(child: Text('No rewards available.'));
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
+        mainAxisExtent: 270,
+      ),
+      itemCount: _availableRewards.length,
+      itemBuilder: (context, index) =>
+          _buildRewardCard(_availableRewards[index]),
+    );
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'No Expiry';
+    try {
+      final dt = DateTime.parse(dateStr);
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  Future<void> _handleRedeem(MenuReward reward) async {
+    if (_userPoints < reward.points) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not enough points!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final success = await _menuService.redeemReward(_mockUserId, reward.id);
+    if (success && mounted) {
+      setState(() => _userPoints -= reward.points);
+      _fetchData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Redeemed! Check "My Rewards" tab.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to redeem. Try again.')),
+      );
+    }
+  }
+
+  Widget _buildRewardCard(MenuReward reward) {
     return GestureDetector(
-      onTap: () => _openCouponDetail(coupon),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CouponDetailPage(previewReward: reward),
+          ),
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x17000000),
-              blurRadius: 12,
-              offset: Offset(0, 3),
-            ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Image
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(14),
+                top: Radius.circular(16),
               ),
               child: SizedBox(
-                height: 128,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(coupon.imageAsset, fit: BoxFit.cover),
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColor.primaryRed.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: const Text(
-                          'Use at Store',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10,
-                            height: 1,
-                          ),
-                        ),
+                height: 130,
+                width: double.infinity,
+                child: reward.image != null && reward.image!.startsWith('http')
+                    ? Image.network(reward.image!, fit: BoxFit.cover)
+                    : Image.asset(
+                        'assets/images/Chocolate.png',
+                        fit: BoxFit.cover,
                       ),
-                    ),
-                  ],
-                ),
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      coupon.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF2F2F34),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        height: 1.2,
-                      ),
+            // Text info
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    reward.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Color(0xFF2F2F34),
                     ),
-                    const Spacer(),
-                    const Text(
-                      'Valid until',
-                      style: TextStyle(
-                        color: Color(0xFF8A909C),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 10,
-                      ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Valid until ${_formatDate(reward.expDate)}',
+                    style: const TextStyle(
+                      color: Color(0xFF8A909C),
+                      fontSize: 11,
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            coupon.validUntil,
-                            style: const TextStyle(
-                              color: Color(0xFF656D7B),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        _buildCouponPointChip(coupon.points),
-                      ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${reward.points} Pts',
+                    style: const TextStyle(
+                      color: AppColor.primaryRed,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            // Floating rounded Redeem button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+              child: SizedBox(
+                height: 36,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _handleRedeem(reward),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primaryRed,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text(
+                    'Redeem Now',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
                 ),
               ),
             ),
@@ -305,243 +346,120 @@ class _RewardPageState extends State<RewardPage> {
     );
   }
 
-  Widget _buildCouponPointChip(int points) {
-    return Row(
-      children: [
-        Container(
-          width: 18,
-          height: 18,
-          decoration: const BoxDecoration(
-            color: AppColor.primaryRed,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.star_rounded, color: Colors.white, size: 12),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$points',
-          style: const TextStyle(
-            color: AppColor.primaryRed,
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            height: 1,
-          ),
-        ),
-      ],
+  Widget _buildMyRewards() {
+    if (_isLoading)
+      return const Center(
+        child: CircularProgressIndicator(color: AppColor.primaryRed),
+      );
+    if (_myRewards.isEmpty)
+      return const Center(child: Text('You don\'t have any rewards yet.'));
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: _myRewards.length,
+      itemBuilder: (context, index) => _buildMyRewardCard(_myRewards[index]),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFF7E6),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 220,
-            pinned: true,
-            backgroundColor: const Color(0xFFAA8515),
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            leading: const SizedBox.shrink(),
-            title: const Text(
-              'Reward',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+  Widget _buildMyRewardCard(UserReward userReward) {
+    final reward = userReward.reward;
+    if (reward == null) return const SizedBox();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColor.primaryRed.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: 80,
+              height: 80,
+              child: reward.image != null && reward.image!.startsWith('http')
+                  ? Image.network(reward.image!, fit: BoxFit.cover)
+                  : Image.asset(
+                      'assets/images/Chocolate.png',
+                      fit: BoxFit.cover,
+                    ),
             ),
-            centerTitle: true,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(36),
-              child: Container(
-                height: 30,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFF7E6),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(36),
-                    topRight: Radius.circular(36),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reward.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.zero,
-              background: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: AppColor.goldGradient,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 40,
-                    left: 24,
-                    right: 24,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Gold Member',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  '60 Points',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    height: 1.1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Material(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              child: InkWell(
-                                onTap: _showPrivilegeDialog,
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  child: const Text(
-                                    'Privilege',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Progress Bar
-                        Stack(
-                          children: [
-                            Container(
-                              height: 8,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            Container(
-                              height: 8,
-                              width:
-                                  MediaQuery.of(context).size.width *
-                                  0.6, // Mock 60% progress
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.5),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Another 40 points to reach Platinum',
-                          style: TextStyle(fontSize: 12, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  'Status: ${userReward.status}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                ),
+              ],
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Exclusive Rewards',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2F2F34),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: _showRedeemVoucherOverlay,
-                    icon: const Icon(
-                      Icons.confirmation_number_outlined,
-                      size: 18,
-                    ),
-                    label: const Text('Redeem Voucher'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColor.primaryRed,
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+          ElevatedButton(
+            onPressed: () => _useCoupon(userReward),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFAA8515),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 14,
-                mainAxisExtent: 252,
-              ),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final coupon = _rewardCoupons[index % _rewardCoupons.length];
-                return _buildRewardCard(coupon);
-              }, childCount: _rewardCoupons.length + _extraRewardBoxes),
-            ),
+            child: const Text('Use', style: TextStyle(fontSize: 12)),
           ),
         ],
       ),
     );
   }
+
+  void _useCoupon(UserReward userReward) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CouponDetailPage(
+          userReward: userReward,
+          onUsed: () => _fetchData(),
+        ),
+      ),
+    );
+  }
 }
 
-class _RewardCoupon {
-  const _RewardCoupon({
-    required this.rewardId,
-    required this.imageAsset,
-    required this.title,
-    required this.validUntil,
-    required this.points,
-    required this.condition,
-    required this.invoke,
-  });
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar);
 
-  final String rewardId; // Map to reward_id
-  final String imageAsset; // Map to image
-  final String title; // Map to header
-  final String validUntil; // Map to exp_date
-  final int points; // Map to require_point
-  final String condition; // Map to condition
-  final bool invoke; // Map to invoke
+  final Container _tabBar;
+
+  @override
+  double get minExtent => 48;
+  @override
+  double get maxExtent => 48;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return _tabBar;
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
+  }
 }

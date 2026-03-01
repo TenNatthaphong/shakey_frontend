@@ -10,7 +10,7 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final outerRadius = BorderRadius.circular(36.0);
+    const borderRadius = BorderRadius.all(Radius.circular(36.0));
 
     return SafeArea(
       bottom: true,
@@ -22,14 +22,17 @@ class NavBar extends StatelessWidget {
           top: 4.0,
         ),
         child: ClipRRect(
-          borderRadius: outerRadius,
+          borderRadius: borderRadius,
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
             child: Container(
               height: 72,
-              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10.0,
+                vertical: 6.0,
+              ),
               decoration: BoxDecoration(
-                borderRadius: outerRadius,
+                borderRadius: borderRadius,
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -48,69 +51,20 @@ class NavBar extends StatelessWidget {
                     blurRadius: 14,
                     offset: const Offset(0, 6),
                   ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(-2, -2),
-                  ),
                 ],
               ),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: outerRadius,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.10),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: outerRadius,
-                          gradient: RadialGradient(
-                            center: const Alignment(-0.92, -0.90),
-                            radius: 0.78,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.22),
-                              Colors.white.withValues(alpha: 0.00),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: outerRadius,
-                          gradient: RadialGradient(
-                            center: const Alignment(0.92, 0.92),
-                            radius: 0.82,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.16),
-                              Colors.white.withValues(alpha: 0.00),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Main Content
                   Positioned.fill(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         const itemCount = 4;
                         final itemWidth = constraints.maxWidth / itemCount;
-                        final selectedWidth =
-                            (itemWidth - 8).clamp(76.0, 92.0).toDouble();
+                        final selectedWidth = (itemWidth - 8)
+                            .clamp(76.0, 92.0)
+                            .toDouble();
                         final selectedLeft =
                             (itemWidth * currentIndex) +
                             (itemWidth - selectedWidth) / 2;

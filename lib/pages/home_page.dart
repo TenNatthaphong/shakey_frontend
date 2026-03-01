@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
+import 'package:shakey/models/menu.dart';
 import 'package:shakey/pages/coupon_detail_page.dart';
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -21,42 +21,9 @@ class _HomePageState extends State<HomePage> {
   List<String> _banners = [];
 
   int get _bannerCount => _banners.length;
-  // TODO(backend): Replace with coupon list model from database/API.
-  // Expected fields: title (promo_name), imageAsset (image_url), validUntil (valid_until), points (point_cost), detail/description.
-  static const List<_PromoCoupon> _promoCoupons = [
-    _PromoCoupon(
-      imageAsset: 'assets/images/shakewow banner.png',
-      title: 'Get 35 THB Topping San Pa Tong Sticky Rice Coupon',
-      validUntil: '04 May 2026',
-      points: 5,
-      condition:
-          '• This coupon is only for Shakey App Members.\n• This coupon is valid from 18 Feb 2026 - 4 May 2026 only.\n• This coupon can be used for Dine-in only.',
-    ),
-    _PromoCoupon(
-      imageAsset: 'assets/images/shakewow banner2.png',
-      title: 'Get 129 THB Cloudy Rocky Road Coupon',
-      validUntil: '31 Mar 2026',
-      points: 9,
-      condition:
-          '• Valid for Cloudy Rocky Road only.\n• Cannot be combined with other promotions.',
-    ),
-    _PromoCoupon(
-      imageAsset: 'assets/images/shakewow banner3.png',
-      title: 'Get 149 THB Mango Boat Coupon',
-      validUntil: '04 May 2026',
-      points: 9,
-      condition:
-          '• Valid for Mango Boat only.\n• Limited to 1 redemption per member.',
-    ),
-    _PromoCoupon(
-      imageAsset: 'assets/images/shakewow banner4.png',
-      title: '50% off Iced Lemonade & Iced Lemon Tea',
-      validUntil: '31 Jan 2027',
-      points: 40,
-      condition:
-          '• 50% discount on Iced Lemonade or Iced Lemon Tea.\n• Valid at all Shakey branches.',
-    ),
-  ];
+  List<_PromoCoupon> _promoCoupons = [];
+  bool _isLoadingRewards = true;
+
   late final PageController _bannerController;
   Timer? _bannerTimer;
   int _activeBannerIndex = 0;
@@ -67,12 +34,39 @@ class _HomePageState extends State<HomePage> {
     _bannerController = PageController();
     _startTimer();
     _fetchBanners();
+    _fetchRewards();
+  }
+
+  Future<void> _fetchRewards() async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://127.0.0.1:3333/reward'))
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _promoCoupons = data
+                .map((e) => _PromoCoupon.fromJson(e as Map<String, dynamic>))
+                .take(4) // Fetch top 4 for the home page
+                .toList();
+            _isLoadingRewards = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingRewards = false);
+      }
+    } catch (e) {
+      debugPrint('Error fetching home rewards: $e');
+      if (mounted) setState(() => _isLoadingRewards = false);
+    }
   }
 
   Future<void> _fetchBanners() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3333/banner'),
+        Uri.parse('http://127.0.0.1:3333/banner'),
       );
 
       if (response.statusCode == 200) {
@@ -246,11 +240,13 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CouponDetailPage(
-          imageAsset: coupon.imageAsset,
-          title: coupon.title,
-          validUntil: coupon.validUntil,
-          points: coupon.points,
-          condition: coupon.condition,
+          previewReward: MenuReward(
+            id: coupon.rewardId,
+            name: coupon.title,
+            image: coupon.imageAsset,
+            points: coupon.points,
+            description: coupon.condition,
+          ),
         ),
       ),
     );
@@ -758,7 +754,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'No Expiry';
+    try {
+      final dt = DateTime.parse(dateStr);
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
   Widget _buildPromoGrid(_HomeScale scale) {
+    if (_isLoadingRewards) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: scale.h(40)),
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColor.primaryRed),
+        ),
+      );
+    }
+    if (_promoCoupons.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: scale.h(40)),
+        child: const Center(
+          child: Text(
+            'No rewards available.',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
@@ -773,8 +798,8 @@ class _HomePageState extends State<HomePage> {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: scale.w(12),
-          mainAxisSpacing: scale.h(14),
-          mainAxisExtent: scale.h(252),
+          mainAxisSpacing: scale.h(16),
+          mainAxisExtent: scale.h(270),
         ),
         itemBuilder: (_, index) {
           final coupon = _promoCoupons[index];
@@ -783,107 +808,110 @@ class _HomePageState extends State<HomePage> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(scale.r(14)),
+                borderRadius: BorderRadius.circular(scale.r(16)),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x17000000),
-                    blurRadius: scale.r(12),
-                    offset: Offset(0, scale.h(3)),
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: scale.r(10),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Image
                   ClipRRect(
                     borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(scale.r(14)),
+                      top: Radius.circular(scale.r(16)),
                     ),
                     child: SizedBox(
-                      height: scale.h(128),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(coupon.imageAsset, fit: BoxFit.cover),
-                          Positioned(
-                            top: scale.h(8),
-                            left: scale.w(8),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: scale.w(10),
-                                vertical: scale.h(4),
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColor.primaryRed.withValues(
-                                  alpha: 0.9,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  scale.r(24),
-                                ),
-                              ),
-                              child: Text(
-                                'Use at Store',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: scale.sp(10),
-                                  height: 1,
-                                ),
-                              ),
+                      height: scale.h(130),
+                      width: double.infinity,
+                      child: coupon.imageAsset.startsWith('http')
+                          ? Image.network(
+                              coupon.imageAsset,
+                              fit: BoxFit.cover,
+                              errorBuilder: (ctx, err, stack) =>
+                                  const Icon(Icons.broken_image),
+                            )
+                          : Image.asset(
+                              coupon.imageAsset.isEmpty
+                                  ? 'assets/images/Chocolate.png'
+                                  : coupon.imageAsset,
+                              fit: BoxFit.cover,
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        scale.w(10),
-                        scale.h(8),
-                        scale.w(10),
-                        scale.h(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            coupon.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: const Color(0xFF2F2F34),
-                              fontWeight: FontWeight.w700,
-                              fontSize: scale.sp(12),
-                              height: 1.2,
-                            ),
+                  // Text info
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      scale.w(12),
+                      scale.h(10),
+                      scale.w(12),
+                      0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          coupon.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: const Color(0xFF2F2F34),
+                            fontWeight: FontWeight.w700,
+                            fontSize: scale.sp(15),
                           ),
-                          const Spacer(),
-                          Text(
-                            'Valid until',
-                            style: TextStyle(
-                              color: const Color(0xFF8A909C),
-                              fontWeight: FontWeight.w500,
-                              fontSize: scale.sp(10),
-                            ),
+                        ),
+                        SizedBox(height: scale.h(4)),
+                        Text(
+                          'Valid until ${_formatDate(coupon.validUntil)}',
+                          style: TextStyle(
+                            color: const Color(0xFF8A909C),
+                            fontSize: scale.sp(11),
                           ),
-                          SizedBox(height: scale.h(2)),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  coupon.validUntil,
-                                  style: TextStyle(
-                                    color: const Color(0xFF656D7B),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: scale.sp(11),
-                                  ),
-                                ),
-                              ),
-                              _buildCouponPointChip(scale, coupon.points),
-                            ],
+                        ),
+                        SizedBox(height: scale.h(6)),
+                        Text(
+                          '${coupon.points} Pts',
+                          style: TextStyle(
+                            color: AppColor.primaryRed,
+                            fontWeight: FontWeight.w800,
+                            fontSize: scale.sp(16),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  // Floating rounded Redeem button
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      scale.w(10),
+                      0,
+                      scale.w(10),
+                      scale.h(10),
+                    ),
+                    child: SizedBox(
+                      height: scale.h(36),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => _openCouponDetail(coupon),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColor.primaryRed,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(scale.r(20)),
+                          ),
+                        ),
+                        child: Text(
+                          'Redeem Now',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: scale.sp(13),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -893,36 +921,6 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildCouponPointChip(_HomeScale scale, int points) {
-    return Row(
-      children: [
-        Container(
-          width: scale.w(18),
-          height: scale.h(18),
-          decoration: const BoxDecoration(
-            color: AppColor.primaryRed,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.star_rounded,
-            color: Colors.white,
-            size: scale.sp(12),
-          ),
-        ),
-        SizedBox(width: scale.w(4)),
-        Text(
-          '$points',
-          style: TextStyle(
-            color: AppColor.primaryRed,
-            fontWeight: FontWeight.w700,
-            fontSize: scale.sp(16),
-            height: 1,
-          ),
-        ),
-      ],
     );
   }
 
@@ -948,7 +946,9 @@ class _HomePageState extends State<HomePage> {
                 child: ClipPath(
                   clipper: _TopBgClipper(),
                   child: Container(
-                    height: scale.h(320), // Pull curve lower to Reward/Menu area
+                    height: scale.h(
+                      320,
+                    ), // Pull curve lower to Reward/Menu area
                     color: AppColor.primaryRed,
                   ),
                 ),
@@ -1062,7 +1062,19 @@ class _HomeScale {
 
 // - detail <= description/detail (add this field when backend is ready)
 class _PromoCoupon {
+  factory _PromoCoupon.fromJson(Map<String, dynamic> json) {
+    return _PromoCoupon(
+      rewardId: json['reward_id'] as String? ?? '',
+      imageAsset: json['image'] as String? ?? '',
+      title: json['name'] as String? ?? 'Untitled',
+      validUntil: json['exp_date'] as String? ?? '',
+      points: json['require_point'] as int? ?? 0,
+      condition: json['description'] as String? ?? '',
+    );
+  }
+
   const _PromoCoupon({
+    required this.rewardId,
     required this.imageAsset,
     required this.title,
     required this.validUntil,
@@ -1070,6 +1082,7 @@ class _PromoCoupon {
     required this.condition,
   });
 
+  final String rewardId;
   final String imageAsset;
   final String title;
   final String validUntil;

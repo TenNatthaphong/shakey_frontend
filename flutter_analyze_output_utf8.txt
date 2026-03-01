@@ -1,0 +1,40 @@
+﻿Analyzing shakey...                                             
+
+   info - Use 'const' with the constructor to improve performance - lib\pages\coupon_detail_page.dart:198:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\pages\coupon_detail_page.dart:200:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\pages\coupon_detail_page.dart:201:38 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\pages\coupon_detail_page.dart:206:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\pages\coupon_detail_page.dart:209:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\pages\home_page.dart:554:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\pages\home_page.dart:555:18 - prefer_const_constructors
+   info - The private field _selectedToppings could be 'final' - lib\pages\menu_detail_page.dart:27:16 - prefer_final_fields
+   info - Use interpolation to compose strings and values - lib\pages\menu_detail_page.dart:117:29 - prefer_interpolation_to_compose_strings
+   info - Use 'const' with the constructor to improve performance - lib\pages\menu_detail_page.dart:200:21 - prefer_const_constructors
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\pages\menu_detail_page.dart:358:7 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\pages\menu_detail_page.dart:359:7 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\pages\menu_page.dart:234:25 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:60:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\menu_service.dart:19:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\menu_service.dart:35:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\menu_service.dart:58:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\menu_service.dart:69:7 - avoid_print
+
+flutter : 18 issues 
+found. (ran in 1.0s)
+At line:1 char:1
++ flutter analyze > fl
+utter_analyze_output.t
+xt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (18 issues    
+ found. (ran in 1.    
+0s):String) [], R    
+emoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 

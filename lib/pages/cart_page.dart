@@ -60,12 +60,21 @@ class CartPage extends StatelessWidget {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(10),
-                            child: Image.asset(
-                              item.menu.imagePath,
-                              width: 62,
-                              height: 62,
-                              fit: BoxFit.cover,
-                            ),
+                            child: item.menu.imagePath.startsWith('http')
+                                ? Image.network(
+                                    item.menu.imagePath,
+                                    width: 62,
+                                    height: 62,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (ctx, err, stack) =>
+                                        const Icon(Icons.broken_image),
+                                  )
+                                : Image.asset(
+                                    item.menu.imagePath,
+                                    width: 62,
+                                    height: 62,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

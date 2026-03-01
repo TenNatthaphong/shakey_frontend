@@ -155,7 +155,12 @@ class _MenuPageState extends State<MenuPage> {
                             children: [
                               if (searchQuery.isEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    16,
+                                  ),
                                   child: Text(
                                     selectedCategory == 'For You'
                                         ? 'For You'
@@ -566,12 +571,21 @@ class _MenuPageState extends State<MenuPage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.asset(
-              menu.imagePath,
-              width: 90,
-              height: 90,
-              fit: BoxFit.cover,
-            ),
+            child: menu.imagePath.startsWith('http')
+                ? Image.network(
+                    menu.imagePath,
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, stack) =>
+                        const Icon(Icons.broken_image, size: 40),
+                  )
+                : Image.asset(
+                    menu.imagePath,
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -598,28 +612,52 @@ class _MenuPageState extends State<MenuPage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text(
-                      '[price]',
-                      style: TextStyle(
+                    Text(
+                      '\$${menu.price.toStringAsFixed(0)}',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (menu.oldPrice != null) ...[
                       const SizedBox(width: 6),
-                      const Text(
-                        '[price]',
-                        style: TextStyle(
+                      Text(
+                        '\$${menu.oldPrice!.toStringAsFixed(0)}',
+                        style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFFCFCFCF),
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(
-                        Icons.sell_outlined,
-                        size: 14,
-                        color: Color(0xFFF37552),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.primaryRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.sell_outlined,
+                              size: 10,
+                              color: AppColor.primaryRed,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '-${menu.discountPercentage?.toStringAsFixed(0)}%',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColor.primaryRed,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                     const Spacer(),
@@ -706,7 +744,14 @@ class _MenuPageState extends State<MenuPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(menu.imagePath, fit: BoxFit.cover),
+                    child: menu.imagePath.startsWith('http')
+                        ? Image.network(
+                            menu.imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) =>
+                                const Icon(Icons.broken_image, size: 50),
+                          )
+                        : Image.asset(menu.imagePath, fit: BoxFit.cover),
                   ),
                 ),
                 // Badge
@@ -804,9 +849,9 @@ class _MenuPageState extends State<MenuPage> {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Text(
-                '[price]',
-                style: TextStyle(
+              Text(
+                '\$${menu.price.toStringAsFixed(0)}',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -814,12 +859,42 @@ class _MenuPageState extends State<MenuPage> {
               ),
               if (menu.oldPrice != null) ...[
                 const SizedBox(width: 6),
-                const Text(
-                  '[price]',
-                  style: TextStyle(
+                Text(
+                  '\$${menu.oldPrice!.toStringAsFixed(0)}',
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFFCFCFCF),
                     decoration: TextDecoration.lineThrough,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.sell_outlined,
+                        size: 10,
+                        color: AppColor.primaryRed,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        '-${menu.discountPercentage?.toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppColor.primaryRed,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

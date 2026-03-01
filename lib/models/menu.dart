@@ -21,9 +21,76 @@ class Topping {
 
   factory Topping.fromJson(Map<String, dynamic> json) {
     return Topping(
-      id: json['topping_id'] as String,
-      name: json['name'] as String,
-      price: json['price'] as int,
+      id: (json['topping_id'] as String?) ?? '',
+      name: (json['name'] as String?) ?? '',
+      price: (json['price'] as int?) ?? 0,
+    );
+  }
+}
+
+class UserReward {
+  final String id;
+  final String userId;
+  final String rewardId;
+  final String status; // ACTIVE, USED, EXPIRED
+  final DateTime? createdAt;
+  final DateTime? usedAt;
+  final MenuReward? reward;
+
+  const UserReward({
+    required this.id,
+    required this.userId,
+    required this.rewardId,
+    required this.status,
+    this.createdAt,
+    this.usedAt,
+    this.reward,
+  });
+
+  factory UserReward.fromJson(Map<String, dynamic> json) {
+    return UserReward(
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      rewardId: json['reward_id'] as String,
+      status: json['reward_status'] as String,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      usedAt: json['used_at'] != null
+          ? DateTime.parse(json['used_at'] as String)
+          : null,
+      reward: json['reward'] != null
+          ? MenuReward.fromJson(json['reward'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+class MenuReward {
+  final String id;
+  final String name;
+  final String? image;
+  final int points;
+  final String? description;
+  final String? expDate;
+
+  const MenuReward({
+    required this.id,
+    required this.name,
+    this.image,
+    required this.points,
+    this.description,
+    this.expDate,
+  });
+
+  factory MenuReward.fromJson(Map<String, dynamic> json) {
+    return MenuReward(
+      id: (json['reward_id'] as String?) ?? '',
+      name: (json['name'] as String?) ?? 'Untitled',
+      image: json['image'] as String?,
+      points: (json['require_point'] as int?) ?? 0,
+      description: json['description'] as String?,
+      expDate: json['exp_date'] as String?,
     );
   }
 }
@@ -36,6 +103,7 @@ class Menu {
   final String imagePath;
   final double price; // Base price from schema
   final double? oldPrice; // Original price for discount display
+  final double? discountPercentage; // Discount percentage
   final String? badge; // e.g., 'Most ordered', 'Most liked'
   final List<MenuSize> sizes;
   final List<String> categories;
@@ -50,6 +118,7 @@ class Menu {
     required this.imagePath,
     this.price = 0.0,
     this.oldPrice,
+    this.discountPercentage,
     this.badge,
     this.sizes = const [
       MenuSize(name: 'S', price: 45.0),
@@ -61,14 +130,28 @@ class Menu {
   });
 
   factory Menu.fromJson(Map<String, dynamic> json) {
+    final double basePrice = (json['base_price'] as num?)?.toDouble() ?? 0.0;
+    final double discount = (json['discount'] as num?)?.toDouble() ?? 0.0;
+
+    double currentPrice = basePrice;
+    double? previousPrice;
+    double? calculatedPercentage;
+
+    if (discount > 0 && basePrice > 0) {
+      currentPrice = basePrice - (basePrice * (discount / 100));
+      previousPrice = basePrice;
+      calculatedPercentage = discount;
+    }
+
     return Menu(
-      id: json['menu_id'] as String,
-      name: json['name'] as String,
-      description: json['flavor'] ?? 'Delicious drink',
+      id: json['menu_id'] as String? ?? '',
+      name: json['flavor'] as String? ?? 'Untitled',
+      description: json['flavor'] as String? ?? 'Delicious drink',
       rating: (json['rating'] as num?)?.toDouble() ?? 4.5,
-      imagePath: json['image'] as String,
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      oldPrice: (json['old_price'] as num?)?.toDouble(),
+      imagePath: json['image'] as String? ?? '',
+      price: currentPrice,
+      oldPrice: previousPrice,
+      discountPercentage: calculatedPercentage,
       badge: json['badge'] as String?,
       favorite: json['favorite'] as bool? ?? false,
       categories:
