@@ -7,6 +7,9 @@ import 'package:shakey/pages/register_page.dart';
 import 'package:shakey/pages/menu_detail_page.dart';
 import 'package:shakey/pages/cart_page.dart';
 import 'package:shakey/pages/pin_page.dart';
+import 'package:shakey/pages/forgot_password_page.dart';
+import 'package:shakey/pages/otp_verification_page.dart';
+import 'package:shakey/pages/reset_password_page.dart';
 import 'package:shakey/models/menu.dart';
 
 import 'package:shakey/layout/main_layout.dart';
@@ -21,6 +24,9 @@ class AppRoutes {
   static const menuDetailPage = '/menu-detail';
   static const cartPage = '/cart';
   static const pinPage = '/pin';
+  static const forgotPasswordPage = '/forgot-password';
+  static const otpVerificationPage = '/otp-verification';
+  static const resetPasswordPage = '/reset-password';
 }
 
 class AppRouter {
@@ -56,6 +62,23 @@ class AppRouter {
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (context) => PinPage(isSetting: args?['isSetting'] ?? false),
+        );
+
+      case AppRoutes.forgotPasswordPage:
+        return MaterialPageRoute(
+          builder: (context) => const ForgotPasswordPage(),
+        );
+
+      case AppRoutes.otpVerificationPage:
+        final email = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (context) => OtpVerificationPage(email: email),
+        );
+
+      case AppRoutes.resetPasswordPage:
+        final resetToken = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (context) => ResetPasswordPage(resetToken: resetToken),
         );
 
       default:

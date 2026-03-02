@@ -6,10 +6,12 @@ class AuthService {
   SharedPreferences? _prefs;
   late final Dio _dio;
 
+  Dio get dio => _dio;
+
   AuthService._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: "http://localhost:3333",
+        baseUrl: "http://127.0.0.1:3333",
         headers: {"Content-Type": "application/json"},
       ),
     );
@@ -31,7 +33,7 @@ class AuthService {
               try {
                 // Try to refresh token
                 final refreshResponse = await Dio().post(
-                  "http://localhost:3333/auth/refresh",
+                  "http://127.0.0.1:3333/auth/refresh",
                   options: Options(
                     headers: {"Authorization": "Bearer $refreshToken"},
                   ),
@@ -99,7 +101,7 @@ class AuthService {
     return {};
   }
 
-  Future<void> register({
+  Future<Map<String, dynamic>> register({
     required String email,
     required String password,
     required String firstname,
@@ -107,7 +109,7 @@ class AuthService {
     required String phone,
   }) async {
     try {
-      await _dio.post(
+      final response = await _dio.post(
         "/auth/register",
         data: {
           "email": email,
@@ -116,6 +118,71 @@ class AuthService {
           "lastname": lastname,
           "phone": phone,
         },
+      );
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final accessToken = data["access_token"];
+        final refreshToken = data["refresh_token"];
+        final userData = data["user"];
+        if (accessToken is String) {
+          await _prefs?.setString("access_token", accessToken);
+        }
+        if (refreshToken is String) {
+          await _prefs?.setString("refresh_token", refreshToken);
+        }
+        if (userData != null && userData["user_id"] != null) {
+          await _prefs?.setString("user_id", userData["user_id"].toString());
+        }
+      }
+
+      return data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(
+          e.response!.data["message"] is List
+              ? e.response!.data["message"][0]
+              : e.response!.data["message"],
+        );
+      } else {
+        throw Exception("Connection error");
+      }
+    }
+  }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      await _dio.post("/auth/forgot_password", data: {"email": email});
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(e.response!.data["message"]);
+      } else {
+        throw Exception("Connection error");
+      }
+    }
+  }
+
+  Future<String> verifyOtp(String email, String otp) async {
+    try {
+      final response = await _dio.post(
+        "/auth/otp",
+        data: {"email": email, "otp": otp},
+      );
+      return response.data["resetToken"];
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(e.response!.data["message"]);
+      } else {
+        throw Exception("Connection error");
+      }
+    }
+  }
+
+  Future<void> resetPassword(String resetToken, String newPassword) async {
+    try {
+      await _dio.post(
+        "/auth/reset_password",
+        data: {"reset_token": resetToken, "new_password": newPassword},
       );
     } on DioException catch (e) {
       if (e.response != null) {

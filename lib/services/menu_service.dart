@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/auth_service.dart';
 
@@ -8,11 +7,9 @@ class MenuService {
 
   Future<List<Menu>> getMenus() async {
     try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/menu'))
-          .timeout(const Duration(seconds: 10));
+      final response = await AuthService.instance.dio.get('/menu');
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = response.data;
         return data.map((json) => Menu.fromJson(json)).toList();
       }
     } catch (e) {
@@ -24,12 +21,10 @@ class MenuService {
 
   Future<List<Topping>> getToppings() async {
     try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/topping'))
-          .timeout(const Duration(seconds: 10));
+      final response = await AuthService.instance.dio.get('/topping');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = response.data;
         return data.map((json) => Topping.fromJson(json)).toList();
       }
     } catch (e) {
@@ -40,12 +35,12 @@ class MenuService {
 
   Future<List<MenuSize>> getMenuVariants(String menuId) async {
     try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/menu/$menuId/variants'))
-          .timeout(const Duration(seconds: 10));
+      final response = await AuthService.instance.dio.get(
+        '/menu/$menuId/variants',
+      );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = response.data;
         return data.map((json) {
           return MenuSize(
             name: json['size'] ?? '', // Expecting 'S', 'M', 'L'
@@ -71,26 +66,70 @@ class MenuService {
     }
   }
 
-  Future<bool> toggleFavorite(String menuId, bool isCurrentlyFavorite) async {
+  Future<List<String>> getFavoriteIds() async {
+    try {
+      final userId = AuthService.instance.userId;
+      if (userId == null) {
+        print('MenuService: userId is null, skipping favorite fetch');
+        return [];
+      }
+
+      print(
+        'MenuService: fetching favorites for $userId at $baseUrl/menu/favorite/$userId',
+      );
+      final response = await AuthService.instance.dio.get(
+        '/menu/favorite/$userId',
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        print('MenuService: fetched ${data.length} favorites');
+        return data.map((item) => item['menu_id'].toString()).toList();
+      } else {
+        print(
+          'MenuService: getFavoriteIds failed status=${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('MenuService: Error fetching favorite IDs: $e');
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>> toggleFavorite(
+    String menuId,
+    bool isCurrentlyFavorite,
+  ) async {
     try {
       final endpoint = isCurrentlyFavorite ? 'remove' : 'add';
-      final token = AuthService.instance.accessToken;
+      print('MenuService: toggling favorite for $menuId. endpoint=$endpoint');
 
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl/user/favorite/$endpoint'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode({'menu_id': menuId}),
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await AuthService.instance.dio.post(
+        '/user/favorite/$endpoint',
+        data: {'menu_id': menuId},
+      );
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      print('MenuService: toggle status=${response.statusCode}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true};
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      print('MenuService: Error toggling favorite: $e');
+      String message = e.message ?? 'Unknown error';
+      if (e.response != null) {
+        message =
+            e.response?.data?['message']?.toString() ??
+            'Error ${e.response?.statusCode}';
+      }
+      return {'success': false, 'message': message};
     } catch (e) {
-      print('Error toggling favorite: $e');
-      return false;
+      print('MenuService: Error toggling favorite: $e');
+      return {'success': false, 'message': e.toString()};
     }
   }
 }

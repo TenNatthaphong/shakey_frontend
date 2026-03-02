@@ -61,12 +61,14 @@ class _MenuPageState extends State<MenuPage> {
 
   Future<void> _fetchMenus() async {
     final fetched = await _menuService.getMenus();
+    final favIds = await _menuService.getFavoriteIds();
+
     if (mounted) {
       setState(() {
         _allMenus = fetched;
         _isLoading = false;
-        // Populate favorites state from initial pull
-        favorites = fetched.where((m) => m.favorite).map((m) => m.id).toSet();
+        // Populate favorites state from backend
+        favorites = favIds.toSet();
       });
     }
   }
@@ -114,47 +116,38 @@ class _MenuPageState extends State<MenuPage> {
   bool _isFavorite(Menu menu) => favorites.contains(menu.id);
 
   Future<void> _toggleFavorite(Menu menu) async {
-    final authService = AuthService.instance;
-    if (!authService.isAuthenticated) {
-      // Alert or redirect to Login
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Login Required'),
-            content: const Text('Please login to save your favorite drinks.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, AppRoutes.loginPage);
-                },
-                child: const Text('Login'),
-              ),
-            ],
-          ),
-        );
-      }
+    if (!AuthService.instance.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to save favorites'),
+          backgroundColor: AppColor.primaryRed,
+        ),
+      );
       return;
     }
 
-    final success = await _menuService.toggleFavorite(
+    final result = await _menuService.toggleFavorite(
       menu.id,
       _isFavorite(menu),
     );
 
-    if (success && mounted) {
-      setState(() {
-        if (!_isFavorite(menu)) {
-          favorites.add(menu.id);
-        } else {
-          favorites.remove(menu.id);
-        }
-      });
+    if (mounted) {
+      if (result['success'] == true) {
+        setState(() {
+          if (!_isFavorite(menu)) {
+            favorites.add(menu.id);
+          } else {
+            favorites.remove(menu.id);
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: ${result['message'] ?? 'Unknown error'}'),
+            backgroundColor: AppColor.primaryRed,
+          ),
+        );
+      }
     }
   }
 
@@ -590,10 +583,11 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   Widget _buildOfferCard(Menu menu) {
+    bool isFav = _isFavorite(menu);
+
     return Container(
       width: 300,
       margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -605,118 +599,155 @@ class _MenuPageState extends State<MenuPage> {
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: menu.imagePath.startsWith('http')
-                ? Image.network(
-                    menu.imagePath,
-                    width: 90,
-                    height: 90,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, err, stack) =>
-                        const Icon(Icons.broken_image, size: 40),
-                  )
-                : Image.asset(
-                    menu.imagePath,
-                    width: 90,
-                    height: 90,
-                    fit: BoxFit.cover,
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
               children: [
-                Text(
-                  menu.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: menu.imagePath.startsWith('http')
+                      ? Image.network(
+                          menu.imagePath,
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) =>
+                              const Icon(Icons.broken_image, size: 40),
+                        )
+                      : Image.asset(
+                          menu.imagePath,
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                        ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  menu.description,
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      '\$${menu.price.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (menu.oldPrice != null) ...[
-                      const SizedBox(width: 6),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                       Text(
-                        '\$${menu.oldPrice!.toStringAsFixed(0)}',
+                        menu.name,
                         style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFCFCFCF),
-                          decoration: TextDecoration.lineThrough,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
+                      const SizedBox(height: 4),
+                      Text(
+                        menu.description,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade500,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColor.primaryRed.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.sell_outlined,
-                              size: 10,
-                              color: AppColor.primaryRed,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text(
+                            '\$${menu.price.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            const SizedBox(width: 2),
+                          ),
+                          if (menu.oldPrice != null) ...[
+                            const SizedBox(width: 6),
                             Text(
-                              '-${menu.discountPercentage?.toStringAsFixed(0)}%',
+                              '\$${menu.oldPrice!.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColor.primaryRed,
+                                fontSize: 13,
+                                color: Color(0xFFCFCFCF),
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.primaryRed.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.sell_outlined,
+                                    size: 10,
+                                    color: AppColor.primaryRed,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '-${menu.discountPercentage?.toStringAsFixed(0)}%',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColor.primaryRed,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => _cartService.addMenu(menu),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: AppColor.primaryRed,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => _cartService.addMenu(menu),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppColor.primaryRed,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
+            ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _toggleFavorite(menu),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? AppColor.primaryRed : Colors.grey.shade400,
+                    size: 18,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -783,7 +814,7 @@ class _MenuPageState extends State<MenuPage> {
                     context,
                     AppRoutes.menuDetailPage,
                     arguments: menu,
-                  );
+                  ).then((_) => _fetchMenus());
                 },
                 borderRadius: BorderRadius.circular(24),
                 child: Column(

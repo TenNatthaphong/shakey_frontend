@@ -182,7 +182,11 @@ class _LoginPageState extends State<LoginPage> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.of(
+                                    context,
+                                  ).pushNamed(AppRoutes.forgotPasswordPage);
+                                },
                                 child: const Text(
                                   'Forgot Password?',
                                   style: TextStyle(

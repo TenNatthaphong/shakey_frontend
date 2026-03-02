@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
+import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/router.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -11,11 +13,100 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   bool _acceptTerms = false;
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  final _nameController = TextEditingController();
+  final _surnameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _surnameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onRegister() async {
+    final name = _nameController.text.trim();
+    final surname = _surnameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirm = _confirmPasswordController.text.trim();
+
+    if (name.isEmpty ||
+        surname.isEmpty ||
+        phone.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    if (password != confirm) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      return;
+    }
+
+    if (!_acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the terms of agreement')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService.instance.register(
+        email: email,
+        password: password,
+        firstname: name,
+        lastname: surname,
+        phone: phone,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.pinPage,
+          (route) => false,
+          arguments: {'isSetting': true},
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColor.primaryRed,
       body: SafeArea(
         child: LayoutBuilder(
@@ -44,53 +135,57 @@ class _RegisterPageState extends State<RegisterPage> {
             final bottomGap = (6.0 * fitScale).clamp(3.0, 6.0);
             final checkboxScale = fitScale.clamp(0.78, 1.0);
 
-            return Column(
-              children: [
-                SizedBox(
-                  height: topHeight,
-                  child: Stack(
-                    clipBehavior: Clip.hardEdge,
-                    children: [
-                      Container(color: AppColor.primaryRed),
-                      ClipPath(
-                        clipBehavior: Clip.hardEdge,
-                        clipper: _RegisterCreamTopClipper(),
-                        child: Container(color: const Color(0xFFFDF7E6)),
-                      ),
-                      Positioned(
-                        top: imageTop,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Transform.translate(
-                            offset: Offset(imageShiftX, imageShiftY),
-                            child: Transform.rotate(
-                              angle: math.pi / 18,
-                              child: Image.asset(
-                                'assets/images/Strawberry.png',
-                                height: imageHeight,
-                                fit: BoxFit.contain,
+            return SingleChildScrollView(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: topHeight,
+                    child: Stack(
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        Container(color: AppColor.primaryRed),
+                        ClipPath(
+                          clipBehavior: Clip.hardEdge,
+                          clipper: _RegisterCreamTopClipper(),
+                          child: Container(color: const Color(0xFFFDF7E6)),
+                        ),
+                        Positioned(
+                          top: imageTop,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Transform.translate(
+                              offset: Offset(imageShiftX, imageShiftY),
+                              child: Transform.rotate(
+                                angle: math.pi / 18,
+                                child: Image.asset(
+                                  'assets/images/Strawberry.png',
+                                  height: imageHeight,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      ClipPath(
-                        clipBehavior: Clip.hardEdge,
-                        clipper: _RegisterWaveClipper(),
-                        child: Container(color: AppColor.primaryRed),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Container(height: 3, color: AppColor.primaryRed),
-                      ),
-                    ],
+                        ClipPath(
+                          clipBehavior: Clip.hardEdge,
+                          clipper: _RegisterWaveClipper(),
+                          child: Container(color: AppColor.primaryRed),
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            height: 3,
+                            color: AppColor.primaryRed,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding,
                     ),
@@ -106,92 +201,57 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         SizedBox(height: sectionGap),
-                        _buildLabel(
-                          'Name',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Name',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
+                        _buildLabel('Name', fontSize: labelSize),
+                        _buildTextField(
+                          controller: _nameController,
+                          hint: 'Name',
+                          fontSize: fieldFontSize,
+                          verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Surname',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Surname',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
+                        _buildLabel('Surname', fontSize: labelSize),
+                        _buildTextField(
+                          controller: _surnameController,
+                          hint: 'Surname',
+                          fontSize: fieldFontSize,
+                          verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Tel.',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Tel.',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
+                        _buildLabel('Tel.', fontSize: labelSize),
+                        _buildTextField(
+                          controller: _phoneController,
+                          hint: 'Tel.',
+                          fontSize: fieldFontSize,
+                          verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Email',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Email',
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
+                        _buildLabel('Email', fontSize: labelSize),
+                        _buildTextField(
+                          controller: _emailController,
+                          hint: 'Email',
+                          fontSize: fieldFontSize,
+                          verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Password',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
-                        ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Password',
-                            isPassword: true,
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
+                        _buildLabel('Password', fontSize: labelSize),
+                        _buildTextField(
+                          controller: _passwordController,
+                          hint: 'Password',
+                          isPassword: true,
+                          fontSize: fieldFontSize,
+                          verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel(
-                          'Confirm Password',
-                          fontSize: labelSize,
-                          bottomPadding: 2.5 * fitScale,
+                        _buildLabel('Confirm Password', fontSize: labelSize),
+                        _buildTextField(
+                          controller: _confirmPasswordController,
+                          hint: 'Confirm Password',
+                          isPassword: true,
+                          isConfirm: true,
+                          fontSize: fieldFontSize,
+                          verticalPadding: fieldVerticalPadding,
                         ),
-                        SizedBox(
-                          height: fieldHeight,
-                          child: _buildTextField(
-                            hint: 'Confirm Password',
-                            isPassword: true,
-                            fontSize: fieldFontSize,
-                            verticalPadding: fieldVerticalPadding,
-                          ),
-                        ),
-                        SizedBox(height: sectionGap - 2),
+                        SizedBox(height: sectionGap),
                         Row(
                           children: [
                             Transform.scale(
@@ -222,38 +282,34 @@ class _RegisterPageState extends State<RegisterPage> {
                             width: buttonWidth,
                             height: buttonHeight,
                             child: ElevatedButton(
-                              onPressed: _acceptTerms
-                                  ? () {
-                                      Navigator.of(context).pop();
-                                    }
-                                  : null,
+                              onPressed: _isLoading ? null : _onRegister,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: AppColor.primaryRed,
                                 shape: const StadiumBorder(),
                               ),
-                              child: Text(
-                                'REGISTER',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: (14.0 * fitScale).clamp(11.0, 14.0),
-                                ),
-                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColor.primaryRed,
+                                      ),
+                                    )
+                                  : const Text('REGISTER'),
                             ),
                           ),
                         ),
-                        SizedBox(height: (8.0 * fitScale).clamp(5.0, 8.0)),
+                        SizedBox(height: 12),
                         Center(
                           child: GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
-                            child: Text.rich(
+                            child: const Text.rich(
                               TextSpan(
                                 text: 'Already have an account? ',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: (12.0 * fitScale).clamp(10.0, 12.0),
-                                ),
-                                children: const [
+                                style: TextStyle(color: Colors.white),
+                                children: [
                                   TextSpan(
                                     text: 'Sign in',
                                     style: TextStyle(
@@ -265,12 +321,12 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: bottomGap),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),
@@ -278,13 +334,9 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildLabel(
-    String label, {
-    double fontSize = 13,
-    double bottomPadding = 4,
-  }) {
+  Widget _buildLabel(String label, {double fontSize = 13}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: bottomPadding),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         label,
         style: TextStyle(
@@ -297,13 +349,18 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hint,
     bool isPassword = false,
+    bool isConfirm = false,
     double fontSize = 14,
     double verticalPadding = 10,
   }) {
     return TextField(
-      obscureText: isPassword,
+      controller: controller,
+      obscureText:
+          isPassword &&
+          (isConfirm ? _obscureConfirmPassword : _obscurePassword),
       style: TextStyle(color: Colors.white, fontSize: fontSize),
       decoration: InputDecoration(
         hintText: hint,
@@ -313,6 +370,28 @@ class _RegisterPageState extends State<RegisterPage> {
           vertical: verticalPadding,
           horizontal: 16,
         ),
+        suffixIcon: isPassword
+            ? IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  (isConfirm ? _obscureConfirmPassword : _obscurePassword)
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: Colors.white54,
+                  size: 18 * fontSize / 14,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (isConfirm) {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    } else {
+                      _obscurePassword = !_obscurePassword;
+                    }
+                  });
+                },
+              )
+            : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Colors.white),

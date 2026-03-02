@@ -116,6 +116,18 @@ class _RewardPageState extends State<RewardPage>
     }
   }
 
+  Gradient _getMemberGradient() {
+    if (_user == null) return AppColor.bronzeGradient;
+    switch (_user!.member) {
+      case MemberLevel.Bronze:
+        return AppColor.bronzeGradient;
+      case MemberLevel.Silver:
+        return AppColor.silverGradient;
+      case MemberLevel.Gold:
+        return AppColor.goldGradient;
+    }
+  }
+
   void _showPrivilegeDialog() {
     showDialog<void>(
       context: context,
@@ -162,9 +174,9 @@ class _RewardPageState extends State<RewardPage>
     return SliverToBoxAdapter(
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 30),
-        decoration: const BoxDecoration(
-          gradient: AppColor.goldGradient,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          gradient: _getMemberGradient(),
+          borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(36),
             bottomRight: Radius.circular(36),
           ),

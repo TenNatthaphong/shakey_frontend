@@ -26,6 +26,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
   List<Topping> _toppings = [];
   Set<Topping> _selectedToppings = {};
   bool _isLoadingToppings = true;
+  bool _isFavorite = false;
 
   final List<String> sweetnessLevels = [
     '100% Sweet',
@@ -45,6 +46,8 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
     try {
       final variants = await _menuService.getMenuVariants(widget.menu.id);
       final toppings = await _menuService.getToppings();
+      final favIds = await _menuService.getFavoriteIds();
+
       if (mounted) {
         setState(() {
           _sizes = variants;
@@ -55,6 +58,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
 
           _toppings = toppings;
           _isLoadingToppings = false;
+          _isFavorite = favIds.contains(widget.menu.id);
         });
       }
     } catch (e) {
@@ -63,6 +67,28 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
           _isLoadingSizes = false;
           _isLoadingToppings = false;
         });
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final result = await _menuService.toggleFavorite(
+      widget.menu.id,
+      _isFavorite,
+    );
+
+    if (mounted) {
+      if (result['success'] == true) {
+        setState(() {
+          _isFavorite = !_isFavorite;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: ${result['message'] ?? 'Unknown error'}'),
+            backgroundColor: AppColor.primaryRed,
+          ),
+        );
       }
     }
   }
@@ -221,14 +247,28 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildCircleButton(Icons.close, () => Navigator.pop(context)),
-            _buildCircleButton(Icons.share_outlined, () {}),
+            Row(
+              children: [
+                _buildCircleButton(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  _toggleFavorite,
+                  color: _isFavorite ? AppColor.primaryRed : Colors.black87,
+                ),
+                const SizedBox(width: 12),
+                _buildCircleButton(Icons.share_outlined, () {}),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCircleButton(
+    IconData icon,
+    VoidCallback onTap, {
+    Color color = Colors.black87,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -237,7 +277,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
           color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: Colors.black87),
+        child: Icon(icon, color: color),
       ),
     );
   }

@@ -102,6 +102,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Color _getMemberColor() {
+    if (_user == null) return AppColor.bronzeColor;
+    switch (_user!.member) {
+      case MemberLevel.Bronze:
+        return AppColor.bronzeColor;
+      case MemberLevel.Silver:
+        return AppColor.silverColor;
+      case MemberLevel.Gold:
+        return AppColor.goldColor;
+    }
+  }
+
   Future<void> _fetchRewards() async {
     try {
       final response = await http
@@ -482,7 +494,7 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           '${_user?.member.name ?? 'Bronze'} Member',
                           style: TextStyle(
-                            color: const Color(0xFFC5A135),
+                            color: _getMemberColor(),
                             fontWeight: FontWeight.w700,
                             fontSize: scale.sp(14),
                             height: 1,
@@ -541,13 +553,11 @@ class _HomePageState extends State<HomePage> {
                           (MediaQuery.of(context).size.width - scale.w(64)) *
                           _calculateProgress(),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFC5A135),
+                        color: _getMemberColor(),
                         borderRadius: BorderRadius.circular(scale.r(3)),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(
-                              0xFFC5A135,
-                            ).withValues(alpha: 0.3),
+                            color: _getMemberColor().withValues(alpha: 0.3),
                             blurRadius: scale.r(4),
                           ),
                         ],
