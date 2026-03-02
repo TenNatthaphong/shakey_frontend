@@ -65,6 +65,8 @@ class _MenuPageState extends State<MenuPage> {
       setState(() {
         _allMenus = fetched;
         _isLoading = false;
+        // Populate favorites state from initial pull
+        favorites = fetched.where((m) => m.favorite).map((m) => m.id).toSet();
       });
     }
   }
@@ -753,203 +755,236 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   Widget _buildMenuCard(Menu menu) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, AppRoutes.menuDetailPage, arguments: menu);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    bool isFav = _isFavorite(menu);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
         children: [
-          // Image Section
-          AspectRatio(
-            aspectRatio: 1,
-            child: Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: menu.imagePath.startsWith('http')
-                        ? Image.network(
-                            menu.imagePath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) =>
-                                const Icon(Icons.broken_image, size: 50),
-                          )
-                        : Image.asset(menu.imagePath, fit: BoxFit.cover),
-                  ),
-                ),
-                // Badge
-                if (menu.badge != null)
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColor.primaryRed,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        menu.badge!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                // Favorite button
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: GestureDetector(
-                    onTap: () => _toggleFavorite(menu),
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.menuDetailPage,
+                    arguments: menu,
+                  );
+                },
+                borderRadius: BorderRadius.circular(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image Section
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            decoration: BoxDecoration(
+                              color: AppColor.cream,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: menu.imagePath.startsWith('http')
+                                  ? Image.network(
+                                      menu.imagePath,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) =>
+                                          const Icon(
+                                            Icons.broken_image,
+                                            size: 50,
+                                          ),
+                                    )
+                                  : Image.asset(
+                                      menu.imagePath,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ),
+                          // Badge
+                          if (menu.badge != null)
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColor.primaryRed,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  menu.badge!,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Add button (RESTORED to image stack)
+                          Positioned(
+                            bottom: 6,
+                            right: 6,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _cartService.addMenu(menu),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: const BoxDecoration(
+                                    color: AppColor.primaryRed,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: Icon(
-                        _isFavorite(menu)
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: _isFavorite(menu)
-                            ? AppColor.primaryRed
-                            : Colors.grey.shade500,
-                        size: 18,
-                      ),
                     ),
-                  ),
-                ),
-                // Add button
-                Positioned(
-                  bottom: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: () => _cartService.addMenu(menu),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: AppColor.primaryRed,
-                        shape: BoxShape.circle,
+                    const SizedBox(height: 12),
+                    // Text Section
+                    Text(
+                      menu.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                        height: 1.1,
                       ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Text Section
-          Text(
-            menu.name,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-              height: 1.2,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Text(
-                '\$${menu.price.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              if (menu.oldPrice != null) ...[
-                const SizedBox(width: 6),
-                Text(
-                  '\$${menu.oldPrice!.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFFCFCFCF),
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColor.primaryRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.sell_outlined,
-                        size: 10,
-                        color: AppColor.primaryRed,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '-${menu.discountPercentage?.toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: AppColor.primaryRed,
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\$${menu.price.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: AppColor.primaryRed,
+                              ),
+                            ),
+                            if (menu.oldPrice != null)
+                              Row(
+                                children: [
+                                  Text(
+                                    '\$${menu.oldPrice!.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFFCFCFCF),
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  // Discount Badge (RESTORED)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.primaryRed.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      '-${menu.discountPercentage?.toStringAsFixed(0)}%',
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColor.primaryRed,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
-                      ),
-                    ],
+                        // Rating (RESTORED)
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Color(0xFFFFB200),
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              menu.rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Favorite button (SIBLING for hit test priority)
+          Positioned(
+            top: 14,
+            right: 14,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _toggleFavorite(menu),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? AppColor.primaryRed : Colors.grey.shade400,
+                    size: 22,
                   ),
                 ),
-              ],
-              const Spacer(),
-              const Icon(
-                Icons.star_rounded,
-                size: 16,
-                color: Color(0xFFFFB200),
               ),
-              const SizedBox(width: 3),
-              Text(
-                menu.rating.toStringAsFixed(1),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black54,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

@@ -40,7 +40,14 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await AuthService.instance.login(email: email, password: password);
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
+        if (!AuthService.instance.hasPin) {
+          Navigator.of(context).pushReplacementNamed(
+            AppRoutes.pinPage,
+            arguments: {'isSetting': true},
+          );
+        } else {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
+        }
       }
     } catch (e) {
       if (mounted) {

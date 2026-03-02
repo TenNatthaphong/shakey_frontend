@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static final AuthService instance = AuthService._internal();
-  static final Map<String, String> _demoStorage = <String, String>{};
+  SharedPreferences? _prefs;
   late final Dio _dio;
 
   AuthService._internal() {
@@ -17,7 +18,7 @@ class AuthService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final accessToken = _demoStorage["access_token"];
+          final accessToken = this.accessToken;
           if (accessToken != null) {
             options.headers["Authorization"] = "Bearer $accessToken";
           }
@@ -25,7 +26,7 @@ class AuthService {
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            final refreshToken = _demoStorage["refresh_token"];
+            final refreshToken = this.refreshToken;
             if (refreshToken != null) {
               try {
                 // Try to refresh token
@@ -40,10 +41,10 @@ class AuthService {
                 final newRefreshToken = refreshResponse.data["refresh_token"];
 
                 if (newAccessToken is String) {
-                  _demoStorage["access_token"] = newAccessToken;
+                  await _prefs?.setString("access_token", newAccessToken);
                 }
                 if (newRefreshToken is String) {
-                  _demoStorage["refresh_token"] = newRefreshToken;
+                  await _prefs?.setString("refresh_token", newRefreshToken);
                 }
 
                 // Retry original request
@@ -63,19 +64,38 @@ class AuthService {
     );
   }
 
-  bool get isAuthenticated => _demoStorage.containsKey("access_token");
-  String? get userId => _demoStorage["user_id"];
-  String? get accessToken => _demoStorage["access_token"];
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  bool get isAuthenticated => _prefs?.containsKey("access_token") ?? false;
+  String? get userId => _prefs?.getString("user_id");
+  String? get accessToken => _prefs?.getString("access_token");
+  String? get refreshToken => _prefs?.getString("refresh_token");
+
+  // PIN Management
+  bool get hasPin => _prefs?.containsKey("user_pin") ?? false;
+
+  Future<void> savePin(String pin) async {
+    await _prefs?.setString("user_pin", pin);
+  }
+
+  bool verifyPin(String pin) {
+    return _prefs?.getString("user_pin") == pin;
+  }
 
   Future<void> logout() async {
     print("Logging out...");
-    _demoStorage.clear();
-    print("Logout complete, storage cleared.");
+    await _prefs?.remove("access_token");
+    await _prefs?.remove("refresh_token");
+    await _prefs?.remove("user_id");
+    // We keep the PIN even after logout as requested.
+    // await _prefs?.remove("user_pin");
+    print("Logout complete, storage cleared (PIN kept).");
   }
 
   Future<Map<String, dynamic>> signInWithGoogle() async {
     print("Google Sign In requested (dummy)");
-    // Return empty map or mock data as needed
     return {};
   }
 
@@ -122,13 +142,13 @@ class AuthService {
         final refreshToken = data["refresh_token"];
         final userData = data["user"];
         if (accessToken is String) {
-          _demoStorage["access_token"] = accessToken;
+          await _prefs?.setString("access_token", accessToken);
         }
         if (refreshToken is String) {
-          _demoStorage["refresh_token"] = refreshToken;
+          await _prefs?.setString("refresh_token", refreshToken);
         }
         if (userData != null && userData["user_id"] != null) {
-          _demoStorage["user_id"] = userData["user_id"].toString();
+          await _prefs?.setString("user_id", userData["user_id"].toString());
         }
       }
 

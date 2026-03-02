@@ -77,7 +77,10 @@ class _RewardPageState extends State<RewardPage>
             .then((profile) {
               if (mounted) setState(() => _user = profile);
             })
-            .catchError((e) => print('Background profile fetch error: $e'));
+            .catchError((e) {
+              print('Background profile fetch error: $e');
+              return null;
+            });
       }
     } catch (e) {
       print('Error in _fetchData: $e');

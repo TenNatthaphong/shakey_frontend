@@ -154,7 +154,15 @@ class _MorePageState extends State<MorePage> {
                 child: Column(
                   children: [
                     _buildMenuOption('Language'),
-                    _buildMenuOption('Change PIN'),
+                    _buildMenuOption(
+                      'Change PIN',
+                      onTap: () {
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.pinPage,
+                          arguments: {'isSetting': true},
+                        );
+                      },
+                    ),
                     _buildMenuOption('Contact'),
                     _buildMenuOption('Setting'),
                     _buildMenuOption('Help'),

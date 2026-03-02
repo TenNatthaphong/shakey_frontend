@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'router.dart';
+import 'package:shakey/services/auth_service.dart';
 
 const Size _fixedAppSize = Size(390, 844);
 
@@ -46,7 +47,11 @@ class ShakeyApp extends StatelessWidget {
       ),
       scrollBehavior: AppScrollBehavior(),
       onGenerateRoute: AppRouter.onGenerateRoute,
-      initialRoute: AppRoutes.loginPage,
+      initialRoute: AuthService.instance.isAuthenticated
+          ? (AuthService.instance.hasPin
+                ? AppRoutes.pinPage
+                : AppRoutes.homePage)
+          : AppRoutes.loginPage,
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:shakey/pages/login_page.dart';
 import 'package:shakey/pages/register_page.dart';
 import 'package:shakey/pages/menu_detail_page.dart';
 import 'package:shakey/pages/cart_page.dart';
+import 'package:shakey/pages/pin_page.dart';
 import 'package:shakey/models/menu.dart';
 
 import 'package:shakey/layout/main_layout.dart';
@@ -19,6 +20,7 @@ class AppRoutes {
   static const registerPage = '/register';
   static const menuDetailPage = '/menu-detail';
   static const cartPage = '/cart';
+  static const pinPage = '/pin';
 }
 
 class AppRouter {
@@ -49,6 +51,12 @@ class AppRouter {
 
       case AppRoutes.cartPage:
         return MaterialPageRoute(builder: (context) => const CartPage());
+
+      case AppRoutes.pinPage:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (context) => PinPage(isSetting: args?['isSetting'] ?? false),
+        );
 
       default:
         return MaterialPageRoute(

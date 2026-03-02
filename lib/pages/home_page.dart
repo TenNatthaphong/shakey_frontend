@@ -302,6 +302,32 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showPrivilegeDialog() {
+    final memberName = _user?.member.name ?? 'Bronze';
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('$memberName Member Privileges'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('• 10% discount on all drinks'),
+            Text('• Birthday special gift'),
+            Text('• Double points on weekends'),
+            Text('• Exclusive early access to new menus'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openCouponDetail(_PromoCoupon coupon) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -475,10 +501,7 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     GestureDetector(
-                      onTap: () {
-                        // Switch to Reward Tab (index 2)
-                        widget.onTabSelected?.call(2);
-                      },
+                      onTap: _showPrivilegeDialog,
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: scale.w(14),
