@@ -2,9 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/user_service.dart';
+import 'package:shakey/models/user.dart';
+import 'package:shakey/pages/edit_profile_page.dart';
 
-class MorePage extends StatelessWidget {
+class MorePage extends StatefulWidget {
   const MorePage({super.key});
+
+  @override
+  State<MorePage> createState() => _MorePageState();
+}
+
+class _MorePageState extends State<MorePage> {
+  final UserService _userService = UserService.instance;
+  User? _user;
+  bool _isLoadingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _userService.addListener(_onUserChanged);
+    _fetchProfile();
+  }
+
+  void _onUserChanged() {
+    if (mounted) {
+      setState(() {
+        _user = _userService.user;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _userService.removeListener(_onUserChanged);
+    super.dispose();
+  }
+
+  Future<void> _fetchProfile() async {
+    final auth = AuthService.instance;
+    if (!auth.isAuthenticated) {
+      if (mounted) setState(() => _isLoadingProfile = false);
+      return;
+    }
+
+    try {
+      final user = await _userService.getProfile();
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile in MorePage: $e');
+      if (mounted) setState(() => _isLoadingProfile = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,17 +83,39 @@ class MorePage extends StatelessWidget {
                           color: Colors.black,
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
-                          child: Text(
-                            'Kainui',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                        Expanded(
+                          child: _isLoadingProfile
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColor.primaryRed,
+                                  ),
+                                )
+                              : Text(
+                                  _user?.username ?? 'Guest',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                         ),
                         TextButton.icon(
-                          onPressed: () {},
+                          onPressed: _user == null
+                              ? null
+                              : () async {
+                                  final refresh = await Navigator.of(context)
+                                      .push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              EditProfilePage(user: _user!),
+                                        ),
+                                      );
+                                  if (refresh == true) {
+                                    _fetchProfile();
+                                  }
+                                },
                           icon: const Icon(
                             Icons.edit_note,
                             size: 18,
@@ -58,9 +134,9 @@ class MorePage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      '60 points',
-                      style: TextStyle(
+                    Text(
+                      '${_user?.point ?? 0} points',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
@@ -87,8 +163,8 @@ class MorePage extends StatelessWidget {
                     _buildMenuOption(
                       'Log out',
                       onTap: () async {
-                        await AuthService().logout();
-                        if (context.mounted) {
+                        await AuthService.instance.logout();
+                        if (mounted) {
                           Navigator.of(context).pushNamedAndRemoveUntil(
                             AppRoutes.loginPage,
                             (route) => false,

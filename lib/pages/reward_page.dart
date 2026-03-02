@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
-import 'package:shakey/pages/coupon_detail_page.dart';
-import 'package:shakey/services/menu_service.dart';
+import 'package:shakey/pages/reward_detail_page.dart';
+import 'package:shakey/services/reward_service.dart';
+import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/user_service.dart';
+import 'package:shakey/models/user.dart';
 
 class RewardPage extends StatefulWidget {
   const RewardPage({super.key});
@@ -13,35 +16,51 @@ class RewardPage extends StatefulWidget {
 
 class _RewardPageState extends State<RewardPage>
     with SingleTickerProviderStateMixin {
-  final MenuService _menuService = MenuService();
+  final RewardService _rewardService = RewardService();
+  final UserService _userService = UserService.instance;
   late TabController _tabController;
 
   List<MenuReward> _availableRewards = [];
   List<UserReward> _myRewards = [];
   bool _isLoading = true;
-  int _userPoints = 60; // Mock points, should be from User API
-
-  // Mock User ID for testing - Replace with real Auth ID when available
-  static const String _mockUserId = '00000000-0000-0000-0000-000000000000';
+  User? _user;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _userService.addListener(_onUserChanged);
     _fetchData();
+  }
+
+  void _onUserChanged() {
+    if (mounted) {
+      setState(() {
+        _user = _userService.user;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _userService.removeListener(_onUserChanged);
     _tabController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
+    final auth = AuthService.instance;
+
     try {
-      final available = await _menuService.getRewardList();
-      final myRewards = await _menuService.getUserRewards(_mockUserId);
+      final available = await _rewardService.getRewardList();
+      List<UserReward> myRewards = [];
+      if (auth.isAuthenticated) {
+        final allMyRewards = await _rewardService.getUserRewards();
+        myRewards = allMyRewards
+            .where((r) => r.status.toUpperCase() == 'ACTIVE')
+            .toList();
+      }
 
       if (mounted) {
         setState(() {
@@ -50,8 +69,47 @@ class _RewardPageState extends State<RewardPage>
           _isLoading = false;
         });
       }
+
+      // Fetch profile in the background so it doesn't block the UI
+      if (auth.isAuthenticated) {
+        _userService
+            .getProfile()
+            .then((profile) {
+              if (mounted) setState(() => _user = profile);
+            })
+            .catchError((e) => print('Background profile fetch error: $e'));
+      }
     } catch (e) {
+      print('Error in _fetchData: $e');
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  double _calculateProgress() {
+    if (_user == null) return 0.0;
+    final cups = _user!.totalCupsPurchased;
+    switch (_user!.member) {
+      case MemberLevel.Bronze:
+        return (cups / 50).clamp(0.0, 1.0);
+      case MemberLevel.Silver:
+        return ((cups - 50) / 50).clamp(0.0, 1.0);
+      case MemberLevel.Gold:
+        return 1.0;
+    }
+  }
+
+  String _getNextLevelText() {
+    if (_user == null) return 'Join member to earn points';
+    final cups = _user!.totalCupsPurchased;
+    switch (_user!.member) {
+      case MemberLevel.Bronze:
+        final remaining = 50 - cups;
+        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Silver';
+      case MemberLevel.Silver:
+        final remaining = 100 - cups;
+        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Gold';
+      case MemberLevel.Gold:
+        return 'You are at the maximum level!';
     }
   }
 
@@ -59,7 +117,7 @@ class _RewardPageState extends State<RewardPage>
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Gold Member Privileges'),
+        title: Text('${_user?.member.name ?? 'Bronze'} Member Privileges'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,12 +174,15 @@ class _RewardPageState extends State<RewardPage>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Gold Member',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    Text(
+                      '${_user?.member.name ?? 'Bronze'} Member',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
-                      '$_userPoints Points',
+                      '${_user?.point ?? 0} Points',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -143,17 +204,17 @@ class _RewardPageState extends State<RewardPage>
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
-              value: _userPoints / 100,
+              value: _calculateProgress(),
               backgroundColor: Colors.white.withOpacity(0.3),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               borderRadius: BorderRadius.circular(4),
             ),
             const SizedBox(height: 8),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Another 40 points to reach Platinum',
-                style: TextStyle(color: Colors.white60, fontSize: 12),
+                _getNextLevelText(),
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
             ),
           ],
@@ -185,12 +246,14 @@ class _RewardPageState extends State<RewardPage>
   }
 
   Widget _buildRewardCards() {
-    if (_isLoading)
+    if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColor.primaryRed),
       );
-    if (_availableRewards.isEmpty)
+    }
+    if (_availableRewards.isEmpty) {
       return const Center(child: Text('No rewards available.'));
+    }
 
     return GridView.builder(
       padding: const EdgeInsets.all(16),
@@ -209,15 +272,30 @@ class _RewardPageState extends State<RewardPage>
   String _formatDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return 'No Expiry';
     try {
+      // Handle standard ISO 8601 strings
       final dt = DateTime.parse(dateStr);
       return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
     } catch (e) {
+      if (dateStr.length >= 10) {
+        return dateStr.substring(0, 10);
+      }
       return dateStr;
     }
   }
 
   Future<void> _handleRedeem(MenuReward reward) async {
-    if (_userPoints < reward.points) {
+    final auth = AuthService.instance;
+    final userService = UserService.instance;
+    final user = userService.user;
+
+    if (!auth.isAuthenticated || user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to redeem rewards')),
+      );
+      return;
+    }
+
+    if (user.point < reward.points) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Not enough points!'),
@@ -227,9 +305,10 @@ class _RewardPageState extends State<RewardPage>
       return;
     }
 
-    final success = await _menuService.redeemReward(_mockUserId, reward.id);
+    final success = await _rewardService.redeemReward(reward.id);
     if (success && mounted) {
-      setState(() => _userPoints -= reward.points);
+      // Sync points in global state
+      await userService.getProfile();
       _fetchData();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -238,9 +317,9 @@ class _RewardPageState extends State<RewardPage>
         ),
       );
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to redeem. Try again.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Already redeemed.')));
     }
   }
 
@@ -273,7 +352,28 @@ class _RewardPageState extends State<RewardPage>
                 height: 130,
                 width: double.infinity,
                 child: reward.image != null && reward.image!.startsWith('http')
-                    ? Image.network(reward.image!, fit: BoxFit.cover)
+                    ? Image.network(
+                        reward.image!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          print('Error loading reward image: $error');
+                          return const Center(
+                            child: Icon(Icons.broken_image, color: Colors.grey),
+                          );
+                        },
+                      )
                     : Image.asset(
                         'assets/images/Chocolate.png',
                         fit: BoxFit.cover,
@@ -347,12 +447,14 @@ class _RewardPageState extends State<RewardPage>
   }
 
   Widget _buildMyRewards() {
-    if (_isLoading)
+    if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColor.primaryRed),
       );
-    if (_myRewards.isEmpty)
+    }
+    if (_myRewards.isEmpty) {
       return const Center(child: Text('You don\'t have any rewards yet.'));
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(20),
@@ -362,8 +464,12 @@ class _RewardPageState extends State<RewardPage>
   }
 
   Widget _buildMyRewardCard(UserReward userReward) {
+    print('Building card for reward: ${userReward.id}');
     final reward = userReward.reward;
-    if (reward == null) return const SizedBox();
+    if (reward == null) {
+      print('Reward object is NULL for UserReward: ${userReward.id}');
+      return const SizedBox();
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -381,7 +487,12 @@ class _RewardPageState extends State<RewardPage>
               width: 80,
               height: 80,
               child: reward.image != null && reward.image!.startsWith('http')
-                  ? Image.network(reward.image!, fit: BoxFit.cover)
+                  ? Image.network(
+                      reward.image!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, color: Colors.grey),
+                    )
                   : Image.asset(
                       'assets/images/Chocolate.png',
                       fit: BoxFit.cover,
@@ -432,7 +543,10 @@ class _RewardPageState extends State<RewardPage>
       MaterialPageRoute(
         builder: (_) => CouponDetailPage(
           userReward: userReward,
-          onUsed: () => _fetchData(),
+          onUsed: () async {
+            await UserService.instance.getProfile();
+            _fetchData();
+          },
         ),
       ),
     );

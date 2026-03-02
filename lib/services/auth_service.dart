@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 
 class AuthService {
+  static final AuthService instance = AuthService._internal();
   static final Map<String, String> _demoStorage = <String, String>{};
   late final Dio _dio;
 
-  AuthService() {
+  AuthService._internal() {
     _dio = Dio(
       BaseOptions(
         baseUrl: "http://localhost:3333",
@@ -62,6 +63,10 @@ class AuthService {
     );
   }
 
+  bool get isAuthenticated => _demoStorage.containsKey("access_token");
+  String? get userId => _demoStorage["user_id"];
+  String? get accessToken => _demoStorage["access_token"];
+
   Future<void> logout() async {
     print("Logging out...");
     _demoStorage.clear();
@@ -115,11 +120,15 @@ class AuthService {
       if (data is Map<String, dynamic>) {
         final accessToken = data["access_token"];
         final refreshToken = data["refresh_token"];
+        final userData = data["user"];
         if (accessToken is String) {
           _demoStorage["access_token"] = accessToken;
         }
         if (refreshToken is String) {
           _demoStorage["refresh_token"] = refreshToken;
+        }
+        if (userData != null && userData["user_id"] != null) {
+          _demoStorage["user_id"] = userData["user_id"].toString();
         }
       }
 

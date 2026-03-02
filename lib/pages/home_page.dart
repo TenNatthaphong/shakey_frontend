@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
-import 'package:shakey/pages/coupon_detail_page.dart';
+import 'package:shakey/pages/reward_detail_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/user_service.dart';
+import 'package:shakey/models/user.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
@@ -23,6 +26,9 @@ class _HomePageState extends State<HomePage> {
   int get _bannerCount => _banners.length;
   List<_PromoCoupon> _promoCoupons = [];
   bool _isLoadingRewards = true;
+  User? _user;
+  bool _isLoadingProfile = true;
+  final UserService _userService = UserService.instance;
 
   late final PageController _bannerController;
   Timer? _bannerTimer;
@@ -35,6 +41,65 @@ class _HomePageState extends State<HomePage> {
     _startTimer();
     _fetchBanners();
     _fetchRewards();
+    _userService.addListener(_onUserChanged);
+    _fetchProfile();
+  }
+
+  void _onUserChanged() {
+    if (mounted) {
+      setState(() {
+        _user = _userService.user;
+      });
+    }
+  }
+
+  Future<void> _fetchProfile() async {
+    final auth = AuthService.instance;
+    if (!auth.isAuthenticated) {
+      if (mounted) setState(() => _isLoadingProfile = false);
+      return;
+    }
+
+    try {
+      final user = await _userService.getProfile();
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile: $e');
+      if (mounted) setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  double _calculateProgress() {
+    if (_user == null) return 0.0;
+    final cups = _user!.totalCupsPurchased;
+    switch (_user!.member) {
+      case MemberLevel.Bronze:
+        return (cups / 50).clamp(0.0, 1.0);
+      case MemberLevel.Silver:
+        return ((cups - 50) / 50).clamp(0.0, 1.0);
+      case MemberLevel.Gold:
+        return 1.0;
+    }
+  }
+
+  String _getNextLevelText() {
+    if (_user == null) return 'Join member to earn points';
+    final cups = _user!.totalCupsPurchased;
+    switch (_user!.member) {
+      case MemberLevel.Bronze:
+        final remaining = 50 - cups;
+        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Silver';
+      case MemberLevel.Silver:
+        final remaining = 100 - cups;
+        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Gold';
+      case MemberLevel.Gold:
+        return 'You are at the maximum level!';
+    }
   }
 
   Future<void> _fetchRewards() async {
@@ -100,6 +165,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _userService.removeListener(_onUserChanged);
     _bannerTimer?.cancel();
     _bannerController.dispose();
     super.dispose();
@@ -308,23 +374,25 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Welcome',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: scale.sp(12),
-                            fontWeight: FontWeight.w400,
+                        if (_isLoadingProfile)
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        else
+                          Text(
+                            _user?.username ?? 'Guest',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: scale.sp(20),
+                              fontWeight: FontWeight.w800,
+                              height: 0.95,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Kainui',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: scale.sp(20),
-                            fontWeight: FontWeight.w800,
-                            height: 0.95,
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -386,7 +454,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Gold Member',
+                          '${_user?.member.name ?? 'Bronze'} Member',
                           style: TextStyle(
                             color: const Color(0xFFC5A135),
                             fontWeight: FontWeight.w700,
@@ -396,7 +464,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: scale.h(4)),
                         Text(
-                          '60 Points',
+                          '${_user?.point ?? 0} Points',
                           style: TextStyle(
                             color: AppColor.primaryRed,
                             fontWeight: FontWeight.w800,
@@ -448,7 +516,7 @@ class _HomePageState extends State<HomePage> {
                       height: scale.h(6),
                       width:
                           (MediaQuery.of(context).size.width - scale.w(64)) *
-                          0.6, // 60% progress
+                          _calculateProgress(),
                       decoration: BoxDecoration(
                         color: const Color(0xFFC5A135),
                         borderRadius: BorderRadius.circular(scale.r(3)),
@@ -466,7 +534,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: scale.h(8)),
                 Text(
-                  'Another 40 points to reach Platinum',
+                  _getNextLevelText(),
                   style: TextStyle(
                     fontSize: scale.sp(11),
                     color: const Color(0xFF8A909C),

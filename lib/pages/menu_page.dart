@@ -4,6 +4,7 @@ import 'package:shakey/models/menu.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/cart_service.dart';
 import 'package:shakey/services/menu_service.dart';
+import 'package:shakey/services/auth_service.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -110,14 +111,49 @@ class _MenuPageState extends State<MenuPage> {
 
   bool _isFavorite(Menu menu) => favorites.contains(menu.id);
 
-  void _toggleFavorite(Menu menu) {
-    setState(() {
-      if (!_isFavorite(menu)) {
-        favorites.add(menu.id);
-      } else {
-        favorites.remove(menu.id);
+  Future<void> _toggleFavorite(Menu menu) async {
+    final authService = AuthService.instance;
+    if (!authService.isAuthenticated) {
+      // Alert or redirect to Login
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Login Required'),
+            content: const Text('Please login to save your favorite drinks.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, AppRoutes.loginPage);
+                },
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        );
       }
-    });
+      return;
+    }
+
+    final success = await _menuService.toggleFavorite(
+      menu.id,
+      _isFavorite(menu),
+    );
+
+    if (success && mounted) {
+      setState(() {
+        if (!_isFavorite(menu)) {
+          favorites.add(menu.id);
+        } else {
+          favorites.remove(menu.id);
+        }
+      });
+    }
   }
 
   void _openCartPage() {
@@ -231,8 +267,8 @@ class _MenuPageState extends State<MenuPage> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: const [
+                        const Row(
+                          children: [
                             Text(
                               '[location]',
                               style: TextStyle(

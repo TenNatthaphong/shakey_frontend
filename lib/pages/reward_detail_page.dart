@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
-import 'package:shakey/services/menu_service.dart';
+import 'package:shakey/services/reward_service.dart';
+import 'package:shakey/services/user_service.dart';
 
 class CouponDetailPage extends StatefulWidget {
   final UserReward? userReward;
@@ -20,21 +21,38 @@ class CouponDetailPage extends StatefulWidget {
 }
 
 class _CouponDetailPageState extends State<CouponDetailPage> {
-  final MenuService _menuService = MenuService();
+  final RewardService _rewardService = RewardService();
   bool _isProcessing = false;
 
   bool get isPreview => widget.userReward == null;
 
   Future<void> _handleAction() async {
+    final userService = UserService.instance;
+    final user = userService.user;
+
+    if (isPreview) {
+      if (user == null) {
+        _showError('Please login to redeem rewards.');
+        return;
+      }
+      if (user.point < widget.previewReward!.points) {
+        _showError(
+          'Not enough points! You need ${widget.previewReward!.points} Pts.',
+        );
+        return;
+      }
+    }
+
     setState(() => _isProcessing = true);
     try {
       if (isPreview) {
         // Handle Redeem
-        final success = await _menuService.redeemReward(
-          '00000000-0000-0000-0000-000000000000', // Mock User ID
+        final success = await _rewardService.redeemReward(
           widget.previewReward!.id,
         );
         if (success) {
+          // Sync points after successful redeem
+          await userService.getProfile();
           if (mounted) {
             _showSuccessDialog(
               'Redeem Successful!',
@@ -46,10 +64,7 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
         }
       } else {
         // Handle Use
-        final success = await _menuService.useReward(
-          widget.userReward!.userId,
-          widget.userReward!.id,
-        );
+        final success = await _rewardService.useReward(widget.userReward!.id);
         if (success) {
           if (mounted) {
             widget.onUsed?.call();

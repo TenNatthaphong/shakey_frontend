@@ -48,21 +48,27 @@ class UserReward {
   });
 
   factory UserReward.fromJson(Map<String, dynamic> json) {
-    return UserReward(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      rewardId: json['reward_id'] as String,
-      status: json['reward_status'] as String,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
-      usedAt: json['used_at'] != null
-          ? DateTime.parse(json['used_at'] as String)
-          : null,
-      reward: json['reward'] != null
-          ? MenuReward.fromJson(json['reward'] as Map<String, dynamic>)
-          : null,
-    );
+    try {
+      return UserReward(
+        id: json['id']?.toString() ?? '',
+        userId: json['user_id']?.toString() ?? '',
+        rewardId: json['reward_id']?.toString() ?? '',
+        status: json['reward_status']?.toString() ?? 'ACTIVE',
+        createdAt: json['created_at'] != null
+            ? DateTime.tryParse(json['created_at'].toString())
+            : null,
+        usedAt: json['used_at'] != null
+            ? DateTime.tryParse(json['used_at'].toString())
+            : null,
+        reward: json['reward'] != null
+            ? MenuReward.fromJson(json['reward'] as Map<String, dynamic>)
+            : null,
+      );
+    } catch (e) {
+      print('Error parsing UserReward: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 }
 
@@ -85,12 +91,12 @@ class MenuReward {
 
   factory MenuReward.fromJson(Map<String, dynamic> json) {
     return MenuReward(
-      id: (json['reward_id'] as String?) ?? '',
-      name: (json['name'] as String?) ?? 'Untitled',
-      image: json['image'] as String?,
-      points: (json['require_point'] as int?) ?? 0,
-      description: json['description'] as String?,
-      expDate: json['exp_date'] as String?,
+      id: (json['reward_id'] ?? json['id'])?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Untitled',
+      image: json['image']?.toString(),
+      points: int.tryParse(json['require_point']?.toString() ?? '0') ?? 0,
+      description: json['description']?.toString(),
+      expDate: json['exp_date']?.toString(),
     );
   }
 }
