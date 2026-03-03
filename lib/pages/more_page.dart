@@ -112,7 +112,7 @@ class _MorePageState extends State<MorePage> {
                         const Icon(
                           Icons.account_circle,
                           size: 70,
-                          color: Colors.black,
+                          color: AppColor.primaryRed,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -155,7 +155,11 @@ class _MorePageState extends State<MorePage> {
                           ),
                           label: const Text(
                             'edit profile',
-                            style: TextStyle(color: Colors.black, fontSize: 12),
+                            style: TextStyle(
+                              color: AppColor.primaryRed,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
@@ -185,9 +189,9 @@ class _MorePageState extends State<MorePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    _buildMenuOption('Language'),
                     _buildMenuOption(
                       'Change PIN',
+                      icon: Icons.lock_outline,
                       onTap: () {
                         Navigator.of(context).pushNamed(
                           AppRoutes.pinPage,
@@ -195,9 +199,9 @@ class _MorePageState extends State<MorePage> {
                         );
                       },
                     ),
-                    _buildMenuOption('Contact'),
                     _buildMenuOption(
                       'Change Password',
+                      icon: Icons.password_outlined,
                       onTap: (_isLoadingProfile || _isActionLoading)
                           ? null
                           : _changePassword,
@@ -212,12 +216,24 @@ class _MorePageState extends State<MorePage> {
                             )
                           : null,
                     ),
-                    _buildMenuOption('Setting'),
-                    _buildMenuOption('Help'),
-                    _buildMenuOption('FAQ'),
-                    _buildMenuOption('Terms and condition'),
+                    _buildMenuOption('Language', icon: Icons.language),
+                    _buildMenuOption(
+                      'Contact',
+                      icon: Icons.contact_support_outlined,
+                    ),
+                    _buildMenuOption('Setting', icon: Icons.settings_outlined),
+                    _buildMenuOption('Help', icon: Icons.help_outline),
+                    _buildMenuOption(
+                      'FAQ',
+                      icon: Icons.question_answer_outlined,
+                    ),
+                    _buildMenuOption(
+                      'Terms and condition',
+                      icon: Icons.description_outlined,
+                    ),
                     _buildMenuOption(
                       'Log out',
+                      icon: Icons.logout,
                       onTap: () async {
                         await AuthService.instance.logout();
                         if (mounted) {
@@ -246,6 +262,7 @@ class _MorePageState extends State<MorePage> {
 
   Widget _buildMenuOption(
     String title, {
+    required IconData icon,
     VoidCallback? onTap,
     Widget? trailing,
   }) {
@@ -254,20 +271,40 @@ class _MorePageState extends State<MorePage> {
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColor.primaryRed, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColor.primaryRed.withOpacity(0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            Icon(icon, color: AppColor.primaryRed, size: 22),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
             ),
-            if (trailing != null) trailing,
+            if (trailing != null)
+              trailing
+            else
+              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
           ],
         ),
       ),
