@@ -6,6 +6,9 @@ import 'package:shakey/services/cart_service.dart';
 import 'package:shakey/services/menu_service.dart';
 import 'package:shakey/services/auth_service.dart';
 
+import 'package:shakey/services/user_service.dart';
+import 'package:shakey/models/user.dart';
+
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
 
@@ -14,22 +17,14 @@ class MenuPage extends StatefulWidget {
 }
 
 class _MenuPageState extends State<MenuPage> {
-  final MenuService _menuService = MenuService();
+  final MenuService _menuService = MenuService.instance;
   final CartService _cartService = CartService.instance;
 
-  // Option Flags
-  bool isDelivery = true; // true = Deliver now, false = Pick up
+  // List States
+  List<Address> _addresses = [];
+  List<Branch> _branches = [];
 
-  // Dropdown States
-  String address = 'Condo';
-  final List<String> addresses = ['Condo', 'Workplace', 'Add new address'];
-
-  String branch = 'Nearest Branch';
-  final List<String> branches = [
-    'Nearest Branch',
-    'Bangna Branch',
-    'Siam Branch',
-  ];
+  final UserService _userService = UserService.instance;
 
   // Filters State
   String selectedCategory = 'For You';
@@ -56,19 +51,58 @@ class _MenuPageState extends State<MenuPage> {
   void initState() {
     super.initState();
     _cartService.addListener(_onCartChanged);
+    _menuService.addListener(_onMenuServiceChanged);
     _fetchMenus();
+  }
+
+  void _onMenuServiceChanged() {
+    if (mounted) {
+      setState(() {
+        favorites = _menuService.favoriteIds;
+      });
+    }
   }
 
   Future<void> _fetchMenus() async {
     final fetched = await _menuService.getMenus();
     final favIds = await _menuService.getFavoriteIds();
+    final addr = await _userService.getAddresses();
+    final br = await _menuService.getBranches();
 
     if (mounted) {
       setState(() {
         _allMenus = fetched;
         _isLoading = false;
-        // Populate favorites state from backend
         favorites = favIds.toSet();
+        _addresses = addr;
+        _branches = br;
+
+        // Initial defaults if nothing is selected yet
+        if (_cartService.selectedAddress == null && _addresses.isNotEmpty) {
+          _cartService.setSelectedAddress(_addresses.first);
+        }
+        if (_cartService.selectedBranch == null && _branches.isNotEmpty) {
+          _cartService.setSelectedBranch(_branches.first);
+        }
+      });
+    }
+  }
+
+  Future<void> _refreshAddresses() async {
+    final addr = await _userService.getAddresses();
+    if (mounted) {
+      setState(() {
+        _addresses = addr;
+        // Keep selection if it still exists, otherwise reset
+        if (_cartService.selectedAddress != null &&
+            !_addresses.any((a) => a.id == _cartService.selectedAddress!.id)) {
+          _cartService.setSelectedAddress(
+            _addresses.isNotEmpty ? _addresses.first : null,
+          );
+        } else if (_cartService.selectedAddress == null &&
+            _addresses.isNotEmpty) {
+          _cartService.setSelectedAddress(_addresses.first);
+        }
       });
     }
   }
@@ -103,6 +137,7 @@ class _MenuPageState extends State<MenuPage> {
   @override
   void dispose() {
     _cartService.removeListener(_onCartChanged);
+    _menuService.removeListener(_onMenuServiceChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -113,7 +148,7 @@ class _MenuPageState extends State<MenuPage> {
     if (mounted) setState(() {});
   }
 
-  bool _isFavorite(Menu menu) => favorites.contains(menu.id);
+  bool _isFavorite(Menu menu) => _menuService.favoriteIds.contains(menu.id);
 
   Future<void> _toggleFavorite(Menu menu) async {
     if (!AuthService.instance.isAuthenticated) {
@@ -225,13 +260,13 @@ class _MenuPageState extends State<MenuPage> {
 
   Widget _buildHeader() {
     return SizedBox(
-      height: 275,
+      height: 310,
       child: Stack(
         children: [
           // Background Red Area with Curve
           ClipPath(
             clipper: _MenuHeaderClipper(),
-            child: Container(height: 220, color: AppColor.primaryRed),
+            child: Container(height: 260, color: AppColor.primaryRed),
           ),
           // Header Content
           Padding(
@@ -255,34 +290,202 @@ class _MenuPageState extends State<MenuPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          isDelivery ? 'Deliver now' : 'Pick up',
+                          _cartService.isDelivery ? 'Deliver now' : 'Pick up',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Row(
-                          children: [
-                            Text(
-                              '[location]',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                        PopupMenuButton<dynamic>(
+                          padding: EdgeInsets.zero,
+                          offset: const Offset(0, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onSelected: (value) {
+                            if (value == 'add_new') {
+                              _showAddressForm(null);
+                            } else if (value is Address) {
+                              _cartService.setSelectedAddress(value);
+                            } else if (value is Branch) {
+                              _cartService.setSelectedBranch(value);
+                            }
+                          },
+                          itemBuilder: (context) {
+                            if (_cartService.isDelivery) {
+                              return [
+                                ..._addresses.map(
+                                  (addr) => PopupMenuItem<Address>(
+                                    value: addr,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          size: 18,
+                                          color:
+                                              _cartService
+                                                      .selectedAddress
+                                                      ?.id ==
+                                                  addr.id
+                                              ? AppColor.primaryRed
+                                              : Colors.grey,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            addr.name,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontWeight:
+                                                  _cartService
+                                                          .selectedAddress
+                                                          ?.id ==
+                                                      addr.id
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 18,
+                                            color: Colors.blueGrey,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            _showAddressForm(addr);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (_addresses.isNotEmpty)
+                                  const PopupMenuDivider(),
+                                PopupMenuItem<String>(
+                                  value: 'add_new',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: AppColor.primaryRed.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 16,
+                                          color: AppColor.primaryRed,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text(
+                                        'Add new address',
+                                        style: TextStyle(
+                                          color: AppColor.primaryRed,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ];
+                            } else {
+                              return _branches
+                                  .map(
+                                    (br) => PopupMenuItem<Branch>(
+                                      value: br,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.storefront,
+                                            size: 18,
+                                            color:
+                                                _cartService
+                                                        .selectedBranch
+                                                        ?.id ==
+                                                    br.id
+                                                ? AppColor.primaryRed
+                                                : Colors.grey,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              br.detail,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontWeight:
+                                                    _cartService
+                                                            .selectedBranch
+                                                            ?.id ==
+                                                        br.id
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .toList();
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            margin: const EdgeInsets.only(top: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
                               ),
                             ),
-                            Icon(
-                              Icons.keyboard_arrow_down,
-                              color: Colors.white,
-                              size: 18,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    _cartService.isDelivery
+                                        ? (_cartService.selectedAddress?.name ??
+                                              'Select Address')
+                                        : (_cartService
+                                                  .selectedBranch
+                                                  ?.detail ??
+                                              'Select Branch'),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
                     Icon(
-                      isDelivery ? Icons.directions_car : Icons.storefront,
+                      _cartService.isDelivery
+                          ? Icons.directions_car
+                          : Icons.storefront,
                       color: Colors.white.withValues(alpha: 0.3),
                       size: 80,
                     ),
@@ -466,15 +669,15 @@ class _MenuPageState extends State<MenuPage> {
                     _buildModeToggleButton(
                       'Deliver now',
                       Icons.directions_car,
-                      isDelivery,
-                      () => setState(() => isDelivery = true),
+                      _cartService.isDelivery,
+                      () => _cartService.setDeliveryMode(true),
                     ),
                     const SizedBox(width: 16),
                     _buildModeToggleButton(
                       'Pick up',
                       Icons.storefront,
-                      !isDelivery,
-                      () => setState(() => isDelivery = false),
+                      !_cartService.isDelivery,
+                      () => _cartService.setDeliveryMode(false),
                     ),
                   ],
                 ),
@@ -528,6 +731,85 @@ class _MenuPageState extends State<MenuPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Dropdown menus are now handled by PopupMenuButton inline in the header
+
+  void _showAddressForm(Address? existing) {
+    final nameController = TextEditingController(text: existing?.name);
+    final detailController = TextEditingController(text: existing?.detail);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(existing == null ? 'Add Address' : 'Edit Address'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Address Name (e.g. Home, Work)',
+              ),
+            ),
+            TextField(
+              controller: detailController,
+              decoration: const InputDecoration(labelText: 'Detail Address'),
+            ),
+          ],
+        ),
+        actions: [
+          if (existing != null)
+            TextButton(
+              onPressed: () async {
+                final success = await _userService.deleteAddress(existing.id);
+                if (success) {
+                  await _refreshAddresses();
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    Navigator.pop(context); // Also close sheet
+                  }
+                }
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.isEmpty || detailController.text.isEmpty)
+                return;
+
+              bool success;
+              if (existing == null) {
+                success = await _userService.addAddress(
+                  nameController.text,
+                  detailController.text,
+                );
+              } else {
+                success = await _userService.updateAddress(
+                  existing.id,
+                  nameController.text,
+                  detailController.text,
+                );
+              }
+
+              if (success) {
+                await _refreshAddresses();
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  if (existing != null)
+                    Navigator.pop(context); // Close sheet if editing
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }

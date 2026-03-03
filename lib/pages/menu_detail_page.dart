@@ -14,7 +14,7 @@ class MenuDetailPage extends StatefulWidget {
 }
 
 class _MenuDetailPageState extends State<MenuDetailPage> {
-  final MenuService _menuService = MenuService();
+  final MenuService _menuService = MenuService.instance;
   final CartService _cartService = CartService.instance;
   int quantity = 1;
   String selectedSweetness = '100% Sweet';
@@ -40,7 +40,23 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
   @override
   void initState() {
     super.initState();
+    _menuService.addListener(_onMenuServiceChanged);
     _fetchData();
+  }
+
+  void _onMenuServiceChanged() {
+    if (mounted) {
+      setState(() {
+        _isFavorite = _menuService.favoriteIds.contains(widget.menu.id);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _menuService.removeListener(_onMenuServiceChanged);
+    _noteController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchData() async {
@@ -80,9 +96,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
 
     if (mounted) {
       if (result['success'] == true) {
-        setState(() {
-          _isFavorite = !_isFavorite;
-        });
+        // UI will update via listener
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -529,7 +543,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                           : null,
                     );
                     _cartService.addOrderDetail(detail);
-                    Navigator.pop(context);
+                    Navigator.pop(context, true);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.primaryRed,

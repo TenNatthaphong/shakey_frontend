@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shakey/models/menu.dart';
+import 'package:shakey/models/user.dart';
 
 class CartService extends ChangeNotifier {
   CartService._();
@@ -7,8 +8,29 @@ class CartService extends ChangeNotifier {
   static final CartService instance = CartService._();
 
   final List<OrderDetail> _items = [];
+  bool _isDelivery = true;
+  Address? _selectedAddress;
+  Branch? _selectedBranch;
 
   List<OrderDetail> get items => List.unmodifiable(_items);
+  bool get isDelivery => _isDelivery;
+  Address? get selectedAddress => _selectedAddress;
+  Branch? get selectedBranch => _selectedBranch;
+
+  void setDeliveryMode(bool value) {
+    _isDelivery = value;
+    notifyListeners();
+  }
+
+  void setSelectedAddress(Address? address) {
+    _selectedAddress = address;
+    notifyListeners();
+  }
+
+  void setSelectedBranch(Branch? branch) {
+    _selectedBranch = branch;
+    notifyListeners();
+  }
 
   int get itemCount => _items.fold(0, (sum, item) => sum + item.quantity);
 

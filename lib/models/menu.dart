@@ -356,12 +356,54 @@ class OrderDetail {
       'topping_ids': selectedToppings.map((t) => t.id).toList(),
     };
   }
+
+  factory OrderDetail.fromJson(Map<String, dynamic> json) {
+    return OrderDetail(
+      id: json['order_detail_id'] ?? '',
+      menu: json['variant']?['menu'] != null
+          ? Menu.fromJson(json['variant']['menu'])
+          : Menu(id: '', name: 'Deleted Item', imagePath: ''),
+      variant: json['variant'] != null
+          ? MenuSize.fromJson(json['variant'])
+          : null,
+      quantity: json['quantity'] ?? 1,
+      sweetness: json['sweetness'] != null
+          ? '${json['sweetness'].toString().replaceAll('Sweet_', '')}%'
+          : '100%',
+      price: json['price'] ?? 0,
+      note: json['note'],
+    );
+  }
 }
 
 class Order {
   final String id;
   final bool delivery;
+  final int totalPrice;
   final List<OrderDetail> items;
+  final DateTime? createdAt;
 
-  const Order({required this.id, required this.delivery, required this.items});
+  const Order({
+    required this.id,
+    required this.delivery,
+    required this.items,
+    this.totalPrice = 0,
+    this.createdAt,
+  });
+
+  factory Order.fromJson(Map<String, dynamic> json) {
+    return Order(
+      id: json['order_id'] ?? '',
+      delivery: json['delivery'] ?? false,
+      totalPrice: json['total_price'] ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      items:
+          (json['order_details'] as List?)
+              ?.map((e) => OrderDetail.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
 }

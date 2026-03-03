@@ -55,3 +55,30 @@ class User {
     }
   }
 }
+
+class Address {
+  final String id;
+  final String name;
+  final String detail;
+
+  const Address({required this.id, required this.name, required this.detail});
+
+  factory Address.fromJson(Map<String, dynamic> json) {
+    return Address(
+      id: json['address_id'] ?? '',
+      name: json['name'] ?? '',
+      detail: json['detail'] ?? '',
+    );
+  }
+}
+
+class Branch {
+  final String id;
+  final String detail;
+
+  const Branch({required this.id, required this.detail});
+
+  factory Branch.fromJson(Map<String, dynamic> json) {
+    return Branch(id: json['branch_id'] ?? '', detail: json['detail'] ?? '');
+  }
+}

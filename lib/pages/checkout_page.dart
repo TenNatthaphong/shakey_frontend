@@ -13,7 +13,7 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  final MenuService _menuService = MenuService();
+  final MenuService _menuService = MenuService.instance;
   bool _isProcessing = false;
 
   void _showPaymentPopup() {
@@ -37,8 +37,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     try {
       final order = Order(
         id: '', // Server will generate
-        delivery: false, // Default to pickup for now
+        delivery: CartService.instance.isDelivery,
         items: CartService.instance.items,
+        totalPrice: CartService.instance.totalPrice,
       );
 
       final success = await _menuService.createOrder(order);

@@ -91,4 +91,61 @@ class UserService extends ChangeNotifier {
       return false;
     }
   }
+
+  // Address Management
+  Future<List<Address>> getAddresses() async {
+    try {
+      final response = await AuthService.instance.dio.get('/user/address');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Address.fromJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching addresses: $e');
+    }
+    return [];
+  }
+
+  Future<bool> addAddress(String name, String detail) async {
+    try {
+      final response = await AuthService.instance.dio.post(
+        '/user/address/add',
+        data: {'name': name, 'detail': detail},
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Error adding address: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateAddress(
+    String addressId,
+    String name,
+    String detail,
+  ) async {
+    try {
+      final response = await AuthService.instance.dio.post(
+        '/user/update_address',
+        data: {'address_id': addressId, 'name': name, 'detail': detail},
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Error updating address: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteAddress(String addressId) async {
+    try {
+      final response = await AuthService.instance.dio.post(
+        '/user/address/delete',
+        data: {'address_id': addressId},
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Error deleting address: $e');
+      return false;
+    }
+  }
 }

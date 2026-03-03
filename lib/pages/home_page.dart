@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/pages/reward_detail_page.dart';
+import 'package:shakey/pages/menu_detail_page.dart';
+import 'package:shakey/services/cart_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shakey/models/home_models.dart';
@@ -11,6 +13,7 @@ import 'package:shakey/services/auth_service.dart';
 import 'package:shakey/services/user_service.dart';
 import 'package:shakey/models/user.dart';
 import 'package:shakey/services/banner_service.dart';
+import 'package:shakey/services/menu_service.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
@@ -20,8 +23,6 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
-// Simplified banner data structure: just a list of image paths/URLs
 
 class _HomePageState extends State<HomePage> {
   List<String> _banners = [];
@@ -36,6 +37,9 @@ class _HomePageState extends State<HomePage> {
   late final PageController _bannerController;
   Timer? _bannerTimer;
   int _activeBannerIndex = 0;
+  List<Order> _recentOrders = [];
+  bool _isLoadingOrders = true;
+  final MenuService _menuService = MenuService.instance;
 
   @override
   void initState() {
@@ -48,6 +52,27 @@ class _HomePageState extends State<HomePage> {
     _fetchProfile();
     BannerService.instance.addListener(_onBannersChanged);
     _banners = BannerService.instance.banners;
+    _fetchRecentOrders();
+    CartService.instance.addListener(_onCartChanged);
+  }
+
+  void _onCartChanged() {
+    // Refresh recent orders when cart changes (e.g. after clearing upon successful order)
+    _fetchRecentOrders();
+  }
+
+  Future<void> _fetchRecentOrders() async {
+    if (!AuthService.instance.isAuthenticated) {
+      if (mounted) setState(() => _isLoadingOrders = false);
+      return;
+    }
+    final orders = await _menuService.getOrderHistory();
+    if (mounted) {
+      setState(() {
+        _recentOrders = orders;
+        _isLoadingOrders = false;
+      });
+    }
   }
 
   void _onBannersChanged() {
@@ -60,9 +85,15 @@ class _HomePageState extends State<HomePage> {
 
   void _onUserChanged() {
     if (mounted) {
+      final oldUser = _user;
       setState(() {
         _user = _userService.user;
       });
+      // If user changed from null to logged in, or changed user, refresh orders
+      if (_user != null &&
+          (oldUser == null || oldUser.userId != _user!.userId)) {
+        _fetchRecentOrders();
+      }
     }
   }
 
@@ -153,13 +184,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchBanners() async {
-    // BannerService handles synchronization now
     BannerService.instance.getBanners();
   }
 
   void _startTimer() {
     _bannerTimer?.cancel();
-    // Only start timer if we actually have banners to cycle through
     if (_bannerCount == 0) return;
 
     _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
@@ -287,7 +316,6 @@ class _HomePageState extends State<HomePage> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          // TODO(backend): Replace with scanned payload from real QR scanner integration.
                           Navigator.of(dialogContext).pop('SHAKEY-EARN-001');
                         },
                         style: ElevatedButton.styleFrom(
@@ -529,7 +557,6 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 SizedBox(height: scale.h(16)),
-                // Progress Bar
                 Stack(
                   children: [
                     Container(
@@ -643,7 +670,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBannerCarousel(HomeScale scale) {
-    // Show cached banners immediately. Only spinner if we truly have 0 banners (first time ever)
     if (_bannerCount == 0) {
       return SizedBox(
         height: scale.h(200),
@@ -670,7 +696,6 @@ class _HomePageState extends State<HomePage> {
                   setState(() {
                     _activeBannerIndex = index;
                   });
-                  // If swiped manually, reset the timer
                   _startTimer();
                 },
                 itemBuilder: (_, index) {
@@ -755,35 +780,202 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildRecentOrder(HomeScale scale) {
+    if (_isLoadingOrders) {
+      return SizedBox(
+        height: scale.h(160),
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColor.primaryRed),
+        ),
+      );
+    }
+
+    if (_recentOrders.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: scale.w(16)),
+        child: Container(
+          padding: EdgeInsets.all(scale.r(20)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(scale.r(12)),
+          ),
+          child: Center(
+            child: Text(
+              'No recent orders yet',
+              style: TextStyle(color: Colors.grey, fontSize: scale.sp(14)),
+            ),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
-      height: scale.h(240), // Increased height to accommodate shadow
+      height: scale.h(200),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         clipBehavior: Clip.none,
-        cacheExtent: 500, // Pre-render items for smoother scrolling
-        itemCount: 20,
+        itemCount: _recentOrders.length,
         padding: EdgeInsets.fromLTRB(scale.w(16), 0, scale.w(16), scale.h(15)),
         separatorBuilder: (_, _) => SizedBox(width: scale.w(15)),
         itemBuilder: (_, index) {
-          return RepaintBoundary(
-            child: Container(
-              width: scale.w(170),
-              margin: EdgeInsets.only(bottom: scale.h(2)),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(scale.r(10)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0x1F000000),
-                    blurRadius: scale.r(15),
-                    offset: Offset(0, scale.h(5)),
-                  ),
-                ],
-              ),
-            ),
-          );
+          return _buildRecentOrderCard(scale, _recentOrders[index]);
         },
+      ),
+    );
+  }
+
+  Widget _buildRecentOrderCard(HomeScale scale, Order order) {
+    final firstItem = order.items.isNotEmpty ? order.items.first : null;
+    final otherItemsCount = order.items.length - 1;
+
+    return InkWell(
+      onTap: firstItem != null
+          ? () async {
+              final added = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MenuDetailPage(menu: firstItem.menu),
+                ),
+              );
+              if (added == true) {
+                widget.onTabSelected?.call(1);
+              }
+            }
+          : null,
+      borderRadius: BorderRadius.circular(scale.r(20)),
+      child: Container(
+        width: scale.w(220),
+        padding: EdgeInsets.all(scale.r(14)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(scale.r(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: scale.r(15),
+              offset: Offset(0, scale.h(6)),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(scale.r(12)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(scale.r(12)),
+                    child:
+                        (firstItem?.menu.imagePath.startsWith('http') ?? false)
+                        ? Image.network(
+                            firstItem!.menu.imagePath,
+                            width: scale.w(52),
+                            height: scale.w(52),
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            firstItem?.menu.imagePath ??
+                                'assets/images/Chocolate.png',
+                            width: scale.w(52),
+                            height: scale.w(52),
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                ),
+                SizedBox(width: scale.w(12)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        firstItem?.menu.name ?? 'Order',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: scale.sp(15),
+                          color: const Color(0xFF2F3B59),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        otherItemsCount > 0
+                            ? '+$otherItemsCount more items'
+                            : '1 item',
+                        style: TextStyle(
+                          fontSize: scale.sp(12),
+                          color: Colors.blueGrey.shade400,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Container(
+              height: 1,
+              color: Colors.grey.shade100,
+              margin: EdgeInsets.symmetric(vertical: scale.h(4)),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Price',
+                      style: TextStyle(
+                        fontSize: scale.sp(10),
+                        color: Colors.grey.shade400,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '\$${order.totalPrice}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: AppColor.primaryRed,
+                        fontSize: scale.sp(16),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: scale.w(10),
+                    vertical: scale.h(6),
+                  ),
+                  decoration: BoxDecoration(
+                    color: (order.delivery ? Colors.blue : Colors.orange)
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(scale.r(10)),
+                  ),
+                  child: Text(
+                    order.delivery ? 'Delivery' : 'Pickup',
+                    style: TextStyle(
+                      fontSize: scale.sp(10),
+                      fontWeight: FontWeight.w800,
+                      color: (order.delivery ? Colors.blue : Colors.orange),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -913,7 +1105,6 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Image
                   ClipRRect(
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(scale.r(16)),
@@ -936,7 +1127,6 @@ class _HomePageState extends State<HomePage> {
                             ),
                     ),
                   ),
-                  // Text info
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       scale.w(12),
@@ -978,7 +1168,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const Spacer(),
-                  // Floating rounded Redeem button
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       scale.w(10),
@@ -1040,9 +1229,7 @@ class _HomePageState extends State<HomePage> {
                 child: ClipPath(
                   clipper: TopBgClipper(),
                   child: Container(
-                    height: scale.h(
-                      320,
-                    ), // Pull curve lower to Reward/Menu area
+                    height: scale.h(320),
                     color: AppColor.primaryRed,
                   ),
                 ),

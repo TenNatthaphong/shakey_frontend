@@ -1,9 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shakey/models/menu.dart';
+import 'package:shakey/models/user.dart';
 import 'package:shakey/services/auth_service.dart';
 
-class MenuService {
+class MenuService extends ChangeNotifier {
+  MenuService._();
+  static final MenuService instance = MenuService._();
+
+  final Set<String> _favoriteIds = {};
+  Set<String> get favoriteIds => _favoriteIds;
   Future<List<Menu>> getMenus() async {
     try {
       final response = await AuthService.instance.dio.get('/menu');
@@ -93,15 +99,17 @@ class MenuService {
         return [];
       }
 
-      print('MenuService: fetching favorites at /menu/favorite/$userId');
-      final response = await AuthService.instance.dio.get(
-        '/menu/favorite/$userId',
-      );
+      print('MenuService: fetching favorites at /menu/favorite');
+      final response = await AuthService.instance.dio.get('/menu/favorite');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         debugPrint('MenuService: fetched ${data.length} favorites');
-        return data.map((item) => item['menu_id'].toString()).toList();
+        final ids = data.map((item) => item['menu_id'].toString()).toList();
+        _favoriteIds.clear();
+        _favoriteIds.addAll(ids);
+        notifyListeners();
+        return ids;
       } else {
         debugPrint(
           'MenuService: getFavoriteIds failed status=${response.statusCode}',
@@ -130,6 +138,12 @@ class MenuService {
 
       debugPrint('MenuService: toggle status=${response.statusCode}');
       if (response.statusCode == 200 || response.statusCode == 201) {
+        if (isCurrentlyFavorite) {
+          _favoriteIds.remove(menuId);
+        } else {
+          _favoriteIds.add(menuId);
+        }
+        notifyListeners();
         return {'success': true};
       } else {
         return {
@@ -150,5 +164,31 @@ class MenuService {
       debugPrint('MenuService: Error toggling favorite: $e');
       return {'success': false, 'message': e.toString()};
     }
+  }
+
+  Future<List<Order>> getOrderHistory() async {
+    try {
+      final response = await AuthService.instance.dio.get('/order/history');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Order.fromJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching order history: $e');
+    }
+    return [];
+  }
+
+  Future<List<Branch>> getBranches() async {
+    try {
+      final response = await AuthService.instance.dio.get('/branch');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Branch.fromJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching branches: $e');
+    }
+    return [];
   }
 }
