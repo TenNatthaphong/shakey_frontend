@@ -64,6 +64,31 @@ class _LoginPageState extends State<LoginPage> {
     Navigator.of(context).pushNamed(AppRoutes.registerPage);
   }
 
+  Future<void> _onGoogleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await AuthService.instance.signInWithGoogle();
+      if (mounted) {
+        if (!AuthService.instance.hasPin) {
+          Navigator.of(context).pushReplacementNamed(
+            AppRoutes.pinPage,
+            arguments: {'isSetting': true},
+          );
+        } else {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
@@ -218,7 +243,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                       )
                                     : const Text(
-                                        'LOGIN',
+                                        'Login',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 16,
@@ -278,12 +303,21 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(
                               height: 48,
                               child: ElevatedButton.icon(
-                                onPressed: () {},
-                                icon: const _GoogleLogoIcon(size: 20),
-                                label: const Text('Google'),
+                                onPressed: _isLoading ? null : _onGoogleLogin,
+                                icon: Image.asset(
+                                  'assets/images/google_logo.png',
+                                  height: 20,
+                                ),
+                                label: const Text(
+                                  'Google',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
-                                  foregroundColor: Colors.black87,
+                                  foregroundColor: AppColor.primaryRed,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -383,32 +417,4 @@ class _LoginWaveClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-class _GoogleLogoIcon extends StatelessWidget {
-  const _GoogleLogoIcon({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        'G',
-        style: TextStyle(
-          color: const Color(0xFF4285F4),
-          fontSize: size * 0.72,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
-      ),
-    );
-  }
 }
