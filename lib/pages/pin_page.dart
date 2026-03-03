@@ -103,6 +103,8 @@ class _PinPageState extends State<PinPage> {
     } else {
       if (AuthService.instance.verifyPin(_pin)) {
         if (mounted) {
+          // Proactively refresh token when entering via PIN
+          AuthService.instance.refreshTokenManual();
           Navigator.of(context).pushReplacementNamed(AppRoutes.homePage);
         }
       } else {

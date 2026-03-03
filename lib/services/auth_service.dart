@@ -232,4 +232,25 @@ class AuthService {
       }
     }
   }
+
+  Future<void> refreshTokenManual() async {
+    final rt = refreshToken;
+    if (rt == null) return;
+    try {
+      final response = await Dio().post(
+        "http://127.0.0.1:3333/auth/refresh",
+        options: Options(headers: {"Authorization": "Bearer $rt"}),
+      );
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final newAt = data["access_token"];
+        final newRt = data["refresh_token"];
+        if (newAt is String) await _prefs?.setString("access_token", newAt);
+        if (newRt is String) await _prefs?.setString("refresh_token", newRt);
+      }
+    } catch (e) {
+      print("Manual refresh failed: $e");
+    }
+  }
 }
