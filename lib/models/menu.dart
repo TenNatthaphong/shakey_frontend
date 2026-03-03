@@ -1,13 +1,19 @@
 class MenuSize {
+  final String variantId;
   final String name;
   final double price;
 
-  const MenuSize({required this.name, required this.price});
+  const MenuSize({
+    required this.variantId,
+    required this.name,
+    required this.price,
+  });
 
   factory MenuSize.fromJson(Map<String, dynamic> json) {
     return MenuSize(
-      name: json['name'] as String,
-      price: (json['price'] as num).toDouble(),
+      variantId: (json['variant_id'] ?? '') as String,
+      name: (json['size'] ?? '') as String,
+      price: (json['price_upsize'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -126,14 +132,40 @@ class Menu {
     this.oldPrice,
     this.discountPercentage,
     this.badge,
-    this.sizes = const [
-      MenuSize(name: 'S', price: 45.0),
-      MenuSize(name: 'M', price: 55.0),
-      MenuSize(name: 'L', price: 65.0),
-    ],
+    this.sizes = const [],
     this.categories = const ['Milk Tea'],
     this.favorite = false,
   });
+
+  Menu copyWith({
+    String? id,
+    String? name,
+    String? description,
+    double? rating,
+    String? imagePath,
+    double? price,
+    double? oldPrice,
+    double? discountPercentage,
+    String? badge,
+    List<MenuSize>? sizes,
+    List<String>? categories,
+    bool? favorite,
+  }) {
+    return Menu(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      rating: rating ?? this.rating,
+      imagePath: imagePath ?? this.imagePath,
+      price: price ?? this.price,
+      oldPrice: oldPrice ?? this.oldPrice,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      badge: badge ?? this.badge,
+      sizes: sizes ?? this.sizes,
+      categories: categories ?? this.categories,
+      favorite: favorite ?? this.favorite,
+    );
+  }
 
   factory Menu.fromJson(Map<String, dynamic> json) {
     final double basePrice = (json['base_price'] as num?)?.toDouble() ?? 0.0;
@@ -160,6 +192,7 @@ class Menu {
       discountPercentage: calculatedPercentage,
       badge: json['badge'] as String?,
       favorite: json['favorite'] as bool? ?? false,
+      sizes: const [], // Variants fetched separately or via Service
       categories:
           (json['categories'] as List?)?.map((e) => e.toString()).toList() ??
           ['Milk Tea'],
@@ -278,17 +311,21 @@ class Menu {
 class OrderDetail {
   final String id;
   final Menu menu;
+  final MenuSize? variant;
   final int quantity;
   final String sweetness;
   final int price;
+  final String? note;
   final List<Topping> selectedToppings;
 
   const OrderDetail({
     required this.id,
     required this.menu,
+    this.variant,
     required this.quantity,
     required this.sweetness,
     required this.price,
+    this.note,
     this.selectedToppings = const [],
   });
 
@@ -296,6 +333,28 @@ class OrderDetail {
   int get totalPrice {
     int toppingsSum = selectedToppings.fold(0, (sum, t) => sum + t.price);
     return (price + toppingsSum) * quantity;
+  }
+
+  Map<String, dynamic> toJson() {
+    // Map '100% Sweet' to 'Sweet_100' for Prisma enum
+    String mappedSweetness = 'Sweet_100';
+    if (sweetness.contains('0%'))
+      mappedSweetness = 'Sweet_0';
+    else if (sweetness.contains('25%'))
+      mappedSweetness = 'Sweet_25';
+    else if (sweetness.contains('50%'))
+      mappedSweetness = 'Sweet_50';
+    else if (sweetness.contains('75%'))
+      mappedSweetness = 'Sweet_75';
+
+    return {
+      'variant_id': variant?.variantId,
+      'quantity': quantity,
+      'sweetness': mappedSweetness,
+      'price': price,
+      'note': note,
+      'topping_ids': selectedToppings.map((t) => t.id).toList(),
+    };
   }
 }
 
