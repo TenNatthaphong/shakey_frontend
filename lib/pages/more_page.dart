@@ -17,6 +17,7 @@ class _MorePageState extends State<MorePage> {
   final UserService _userService = UserService.instance;
   User? _user;
   bool _isLoadingProfile = true;
+  bool _isActionLoading = false;
 
   @override
   void initState() {
@@ -57,6 +58,37 @@ class _MorePageState extends State<MorePage> {
     } catch (e) {
       debugPrint('Error fetching profile in MorePage: $e');
       if (mounted) setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  Future<void> _changePassword() async {
+    if (_user == null || _user?.email == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User email not found')));
+      }
+      return;
+    }
+
+    final email = _user!.email;
+
+    setState(() => _isActionLoading = true);
+    try {
+      await AuthService.instance.forgotPassword(email);
+      if (mounted) {
+        Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.otpVerificationPage, arguments: email);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
     }
   }
 
@@ -164,6 +196,22 @@ class _MorePageState extends State<MorePage> {
                       },
                     ),
                     _buildMenuOption('Contact'),
+                    _buildMenuOption(
+                      'Change Password',
+                      onTap: (_isLoadingProfile || _isActionLoading)
+                          ? null
+                          : _changePassword,
+                      trailing: _isActionLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColor.primaryRed,
+                              ),
+                            )
+                          : null,
+                    ),
                     _buildMenuOption('Setting'),
                     _buildMenuOption('Help'),
                     _buildMenuOption('FAQ'),
@@ -196,7 +244,11 @@ class _MorePageState extends State<MorePage> {
     );
   }
 
-  Widget _buildMenuOption(String title, {VoidCallback? onTap}) {
+  Widget _buildMenuOption(
+    String title, {
+    VoidCallback? onTap,
+    Widget? trailing,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -208,9 +260,15 @@ class _MorePageState extends State<MorePage> {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColor.primaryRed, width: 1),
         ),
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            ),
+            if (trailing != null) trailing,
+          ],
         ),
       ),
     );
