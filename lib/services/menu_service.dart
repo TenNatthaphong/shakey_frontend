@@ -10,7 +10,15 @@ class MenuService {
       final response = await AuthService.instance.dio.get('/menu');
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        return data.map((json) => Menu.fromJson(json)).toList();
+        final menus = data.map((json) => Menu.fromJson(json)).toList();
+
+        // Fetch variants for each menu to support fast-add with correct ID
+        return await Future.wait(
+          menus.map((m) async {
+            final variants = await getMenuVariants(m.id);
+            return m.copyWith(sizes: variants);
+          }),
+        );
       }
     } catch (e) {
       // TODO(backend): Implement real menu API
@@ -43,6 +51,7 @@ class MenuService {
         final List<dynamic> data = response.data;
         return data.map((json) {
           return MenuSize(
+            variantId: json['variant_id'] ?? '',
             name: json['size'] ?? '', // Expecting 'S', 'M', 'L'
             price:
                 (json['price_upsize'] as num?)?.toDouble() ??
@@ -58,8 +67,19 @@ class MenuService {
 
   Future<bool> createOrder(Order order) async {
     try {
-      // TODO(backend): Implement order submission API
-      return true;
+      final response = await AuthService.instance.dio.post(
+        '/order',
+        data: {
+          'delivery': order.delivery,
+          'order_details': order.items.map((item) => item.toJson()).toList(),
+          'total_price': order.items.fold(
+            0,
+            (sum, item) => sum + item.totalPrice,
+          ),
+        },
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       print('Error creating order: $e');
       return false;
@@ -74,12 +94,8 @@ class MenuService {
         return [];
       }
 
-      print(
-        'MenuService: fetching favorites for $userId at $baseUrl/menu/favorite/$userId',
-      );
-      final response = await AuthService.instance.dio.get(
-        '/menu/favorite/$userId',
-      );
+      print('MenuService: fetching favorites at $baseUrl/menu/favorite');
+      final response = await AuthService.instance.dio.get('/menu/favorite');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;

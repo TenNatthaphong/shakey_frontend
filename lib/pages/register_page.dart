@@ -126,13 +126,11 @@ class _RegisterPageState extends State<RegisterPage> {
             final labelSize = (12.5 * fitScale).clamp(10.5, 12.5);
             final termsSize = (11.5 * fitScale).clamp(9.5, 11.5);
             final fieldFontSize = (14.0 * fitScale).clamp(12.0, 14.0);
-            final fieldHeight = (48.0 * fitScale).clamp(36.0, 48.0);
             final fieldVerticalPadding = (10.0 * fitScale).clamp(6.0, 10.0);
             final fieldGap = (7.0 * fitScale).clamp(4.0, 7.0);
             final sectionGap = (10.0 * fitScale).clamp(6.0, 10.0);
             final buttonWidth = (165.0 * fitScale).clamp(132.0, 165.0);
             final buttonHeight = (40.0 * fitScale).clamp(34.0, 40.0);
-            final bottomGap = (6.0 * fitScale).clamp(3.0, 6.0);
             final checkboxScale = fitScale.clamp(0.78, 1.0);
 
             return SingleChildScrollView(
