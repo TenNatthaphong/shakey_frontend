@@ -27,6 +27,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
   Set<Topping> _selectedToppings = {};
   bool _isLoadingToppings = true;
   bool _isFavorite = false;
+  final TextEditingController _noteController = TextEditingController();
 
   final List<String> sweetnessLevels = [
     '100% Sweet',
@@ -446,6 +447,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
         ),
         const SizedBox(height: 12),
         TextField(
+          controller: _noteController,
           decoration: InputDecoration(
             hintText: 'Add your request (subject to restaurant\'s discretion)',
             hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
@@ -517,10 +519,14 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                     final detail = OrderDetail(
                       id: DateTime.now().microsecondsSinceEpoch.toString(),
                       menu: widget.menu,
+                      variant: _selectedSize,
                       quantity: quantity,
                       sweetness: selectedSweetness,
                       price: currentTotalPrice ~/ quantity,
                       selectedToppings: _selectedToppings.toList(),
+                      note: _noteController.text.isNotEmpty
+                          ? _noteController.text
+                          : null,
                     );
                     _cartService.addOrderDetail(detail);
                     Navigator.pop(context);

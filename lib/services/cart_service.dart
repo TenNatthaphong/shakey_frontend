@@ -14,17 +14,35 @@ class CartService extends ChangeNotifier {
 
   int get totalPrice => _items.fold(0, (sum, item) => sum + item.totalPrice);
 
-  void addMenu(Menu menu, {int quantity = 1, String sweetness = '100%'}) {
+  void addMenu(Menu menu, {int quantity = 1}) {
     if (quantity <= 0) return;
-    final int unitPrice = (menu.price > 0 ? menu.price : menu.sizes.last.price)
-        .toInt();
+
+    // Default to 'S' size if available
+    MenuSize? selectedVariant;
+    try {
+      selectedVariant = menu.sizes.firstWhere(
+        (s) =>
+            s.name.toUpperCase() == 'S' || s.name.toUpperCase().contains('S'),
+      );
+    } catch (e) {
+      if (menu.sizes.isNotEmpty) {
+        selectedVariant = menu.sizes.first;
+      }
+    }
+
+    final int basePrice = menu.price.toInt();
+    final int upsizePrice = selectedVariant?.price.toInt() ?? 0;
+    final int unitPrice = basePrice + upsizePrice;
+
     addOrderDetail(
       OrderDetail(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         menu: menu,
+        variant: selectedVariant,
         quantity: quantity,
-        sweetness: sweetness,
+        sweetness: '100% Sweet', // Default to 100%
         price: unitPrice,
+        selectedToppings: const [], // No toppings
       ),
     );
   }
@@ -32,18 +50,18 @@ class CartService extends ChangeNotifier {
   void addOrderDetail(OrderDetail detail) {
     if (detail.quantity <= 0) return;
 
-    final existingIndex = _items.indexWhere(
-      (item) => _canMerge(item, detail),
-    );
+    final existingIndex = _items.indexWhere((item) => _canMerge(item, detail));
     if (existingIndex >= 0) {
       final existing = _items[existingIndex];
       _items[existingIndex] = OrderDetail(
         id: existing.id,
         menu: existing.menu,
+        variant: existing.variant,
         quantity: existing.quantity + detail.quantity,
         sweetness: existing.sweetness,
         price: existing.price,
         selectedToppings: existing.selectedToppings,
+        note: existing.note,
       );
     } else {
       _items.add(detail);
@@ -65,8 +83,10 @@ class CartService extends ChangeNotifier {
 
   bool _canMerge(OrderDetail a, OrderDetail b) {
     return a.menu.id == b.menu.id &&
+        a.variant?.variantId == b.variant?.variantId &&
         a.price == b.price &&
         a.sweetness == b.sweetness &&
+        a.note == b.note &&
         listEquals(
           a.selectedToppings.map((t) => t.id).toList(),
           b.selectedToppings.map((t) => t.id).toList(),

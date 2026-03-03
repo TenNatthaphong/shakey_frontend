@@ -10,6 +10,7 @@ import 'package:shakey/pages/pin_page.dart';
 import 'package:shakey/pages/forgot_password_page.dart';
 import 'package:shakey/pages/otp_verification_page.dart';
 import 'package:shakey/pages/reset_password_page.dart';
+import 'package:shakey/pages/checkout_page.dart';
 import 'package:shakey/models/menu.dart';
 
 import 'package:shakey/layout/main_layout.dart';
@@ -27,6 +28,7 @@ class AppRoutes {
   static const forgotPasswordPage = '/forgot-password';
   static const otpVerificationPage = '/otp-verification';
   static const resetPasswordPage = '/reset-password';
+  static const checkoutPage = '/checkout';
 }
 
 class AppRouter {
@@ -57,6 +59,9 @@ class AppRouter {
 
       case AppRoutes.cartPage:
         return MaterialPageRoute(builder: (context) => const CartPage());
+
+      case AppRoutes.checkoutPage:
+        return MaterialPageRoute(builder: (context) => const CheckoutPage());
 
       case AppRoutes.pinPage:
         final args = settings.arguments as Map<String, dynamic>?;
