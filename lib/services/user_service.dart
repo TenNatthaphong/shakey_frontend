@@ -92,6 +92,24 @@ class UserService extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateCups(int cups) async {
+    try {
+      final response = await AuthService.instance.dio.post(
+        '/user/update_cup',
+        data: {'cups': cups},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await getProfile(); // Refresh profile to get new total_cups and new member level
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error updating cups: $e');
+      return false;
+    }
+  }
+
   // Address Management
   Future<List<Address>> getAddresses() async {
     try {

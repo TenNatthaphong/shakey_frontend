@@ -168,13 +168,7 @@ class _MenuPageState extends State<MenuPage> {
 
     if (mounted) {
       if (result['success'] == true) {
-        setState(() {
-          if (!_isFavorite(menu)) {
-            favorites.add(menu.id);
-          } else {
-            favorites.remove(menu.id);
-          }
-        });
+        // UI will update via listener
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -95,7 +95,7 @@ class _RewardPageState extends State<RewardPage>
       case MemberLevel.Bronze:
         return (cups / 50).clamp(0.0, 1.0);
       case MemberLevel.Silver:
-        return ((cups - 50) / 50).clamp(0.0, 1.0);
+        return ((cups - 50) / 100).clamp(0.0, 1.0);
       case MemberLevel.Gold:
         return 1.0;
     }
@@ -109,7 +109,7 @@ class _RewardPageState extends State<RewardPage>
         final remaining = 50 - cups;
         return 'Another ${remaining > 0 ? remaining : 0} cups to reach Silver';
       case MemberLevel.Silver:
-        final remaining = 100 - cups;
+        final remaining = 150 - cups;
         return 'Another ${remaining > 0 ? remaining : 0} cups to reach Gold';
       case MemberLevel.Gold:
         return 'You are at the maximum level!';

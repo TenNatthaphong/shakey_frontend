@@ -3,6 +3,7 @@ import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/cart_service.dart';
 import 'package:shakey/services/menu_service.dart';
+import 'package:shakey/services/user_service.dart';
 import 'package:shakey/widgets/qr_payment_popup.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -47,6 +48,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
       if (!mounted) return;
 
       if (success) {
+        int totalCups = CartService.instance.items.fold(
+          0,
+          (sum, item) => sum + item.quantity,
+        );
+        int earnedPoints = CartService.instance.totalPrice ~/ 10;
+
+        if (totalCups > 0) {
+          await UserService.instance.updateCups(totalCups);
+        }
+        if (earnedPoints > 0) {
+          await UserService.instance.updatePoints(earnedPoints);
+        }
+
         CartService.instance.clear();
         _showSuccessDialog();
       } else {
