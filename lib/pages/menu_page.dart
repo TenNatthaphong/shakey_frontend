@@ -1345,18 +1345,22 @@ class _MenuHeaderClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final path = Path();
-    path.lineTo(0, size.height - 40);
+    // Move up the starting point on the left side
+    path.lineTo(0, size.height - 50);
+
+    // Arch upwards in the middle
     path.quadraticBezierTo(
       size.width / 2,
-      size.height,
+      size.height - 90,
       size.width,
-      size.height - 40,
+      size.height - 45,
     );
+
     path.lineTo(size.width, 0);
     path.close();
     return path;
   }
 
   @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
