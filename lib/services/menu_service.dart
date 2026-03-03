@@ -1,10 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/auth_service.dart';
 
 class MenuService {
-  static const String baseUrl = 'http://127.0.0.1:3333';
-
   Future<List<Menu>> getMenus() async {
     try {
       final response = await AuthService.instance.dio.get('/menu');
@@ -14,7 +13,7 @@ class MenuService {
       }
     } catch (e) {
       // TODO(backend): Implement real menu API
-      print('Error fetching menus: $e');
+      debugPrint('Error fetching menus: $e');
     }
     return Menu.allMenus; // Fallback to mock
   }
@@ -28,7 +27,7 @@ class MenuService {
         return data.map((json) => Topping.fromJson(json)).toList();
       }
     } catch (e) {
-      print('Error fetching toppings: $e');
+      debugPrint('Error fetching toppings: $e');
     }
     return [];
   }
@@ -51,7 +50,7 @@ class MenuService {
         }).toList();
       }
     } catch (e) {
-      print('Error fetching menu variants: $e');
+      debugPrint('Error fetching menu variants: $e');
     }
     return []; // Return empty list if fetch fails
   }
@@ -61,7 +60,7 @@ class MenuService {
       // TODO(backend): Implement order submission API
       return true;
     } catch (e) {
-      print('Error creating order: $e');
+      debugPrint('Error creating order: $e');
       return false;
     }
   }
@@ -70,12 +69,12 @@ class MenuService {
     try {
       final userId = AuthService.instance.userId;
       if (userId == null) {
-        print('MenuService: userId is null, skipping favorite fetch');
+        debugPrint('MenuService: userId is null, skipping favorite fetch');
         return [];
       }
 
-      print(
-        'MenuService: fetching favorites for $userId at $baseUrl/menu/favorite/$userId',
+      debugPrint(
+        'MenuService: fetching favorites for $userId at /menu/favorite/$userId',
       );
       final response = await AuthService.instance.dio.get(
         '/menu/favorite/$userId',
@@ -83,15 +82,15 @@ class MenuService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        print('MenuService: fetched ${data.length} favorites');
+        debugPrint('MenuService: fetched ${data.length} favorites');
         return data.map((item) => item['menu_id'].toString()).toList();
       } else {
-        print(
+        debugPrint(
           'MenuService: getFavoriteIds failed status=${response.statusCode}',
         );
       }
     } catch (e) {
-      print('MenuService: Error fetching favorite IDs: $e');
+      debugPrint('MenuService: Error fetching favorite IDs: $e');
     }
     return [];
   }
@@ -102,14 +101,16 @@ class MenuService {
   ) async {
     try {
       final endpoint = isCurrentlyFavorite ? 'remove' : 'add';
-      print('MenuService: toggling favorite for $menuId. endpoint=$endpoint');
+      debugPrint(
+        'MenuService: toggling favorite for $menuId. endpoint=$endpoint',
+      );
 
       final response = await AuthService.instance.dio.post(
         '/user/favorite/$endpoint',
         data: {'menu_id': menuId},
       );
 
-      print('MenuService: toggle status=${response.statusCode}');
+      debugPrint('MenuService: toggle status=${response.statusCode}');
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {'success': true};
       } else {
@@ -119,7 +120,7 @@ class MenuService {
         };
       }
     } on DioException catch (e) {
-      print('MenuService: Error toggling favorite: $e');
+      debugPrint('MenuService: Error toggling favorite: $e');
       String message = e.message ?? 'Unknown error';
       if (e.response != null) {
         message =
@@ -128,7 +129,7 @@ class MenuService {
       }
       return {'success': false, 'message': message};
     } catch (e) {
-      print('MenuService: Error toggling favorite: $e');
+      debugPrint('MenuService: Error toggling favorite: $e');
       return {'success': false, 'message': e.toString()};
     }
   }

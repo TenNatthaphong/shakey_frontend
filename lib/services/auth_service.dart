@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shakey/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
@@ -11,7 +13,7 @@ class AuthService {
   AuthService._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: "http://127.0.0.1:3333",
+        baseUrl: AppConfig.baseUrl,
         headers: {"Content-Type": "application/json"},
       ),
     );
@@ -20,38 +22,35 @@ class AuthService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final accessToken = this.accessToken;
-          if (accessToken != null) {
-            options.headers["Authorization"] = "Bearer $accessToken";
+          final token = accessToken;
+          if (token != null) {
+            options.headers["Authorization"] = "Bearer $token";
           }
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            final refreshToken = this.refreshToken;
-            if (refreshToken != null) {
+            final rt = refreshToken;
+            if (rt != null) {
               try {
                 // Try to refresh token
                 final refreshResponse = await Dio().post(
-                  "http://127.0.0.1:3333/auth/refresh",
-                  options: Options(
-                    headers: {"Authorization": "Bearer $refreshToken"},
-                  ),
+                  "${AppConfig.baseUrl}/auth/refresh",
+                  options: Options(headers: {"Authorization": "Bearer $rt"}),
                 );
 
-                final newAccessToken = refreshResponse.data["access_token"];
-                final newRefreshToken = refreshResponse.data["refresh_token"];
+                final newAt = refreshResponse.data["access_token"];
+                final newRt = refreshResponse.data["refresh_token"];
 
-                if (newAccessToken is String) {
-                  await _prefs?.setString("access_token", newAccessToken);
+                if (newAt is String) {
+                  await _prefs?.setString("access_token", newAt);
                 }
-                if (newRefreshToken is String) {
-                  await _prefs?.setString("refresh_token", newRefreshToken);
+                if (newRt is String) {
+                  await _prefs?.setString("refresh_token", newRt);
                 }
 
                 // Retry original request
-                e.requestOptions.headers["Authorization"] =
-                    "Bearer $newAccessToken";
+                e.requestOptions.headers["Authorization"] = "Bearer $newAt";
                 final response = await _dio.fetch(e.requestOptions);
                 return handler.resolve(response);
               } catch (refreshError) {
@@ -87,17 +86,17 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    print("Logging out...");
+    debugPrint("Logging out...");
     await _prefs?.remove("access_token");
     await _prefs?.remove("refresh_token");
     await _prefs?.remove("user_id");
     // We keep the PIN even after logout as requested.
     // await _prefs?.remove("user_pin");
-    print("Logout complete, storage cleared (PIN kept).");
+    debugPrint("Logout complete, storage cleared (PIN kept).");
   }
 
   Future<Map<String, dynamic>> signInWithGoogle() async {
-    print("Google Sign In requested (dummy)");
+    debugPrint("Google Sign In requested (dummy)");
     return {};
   }
 
@@ -122,18 +121,7 @@ class AuthService {
 
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        final accessToken = data["access_token"];
-        final refreshToken = data["refresh_token"];
-        final userData = data["user"];
-        if (accessToken is String) {
-          await _prefs?.setString("access_token", accessToken);
-        }
-        if (refreshToken is String) {
-          await _prefs?.setString("refresh_token", refreshToken);
-        }
-        if (userData != null && userData["user_id"] != null) {
-          await _prefs?.setString("user_id", userData["user_id"].toString());
-        }
+        await _saveSession(data);
       }
 
       return data;
@@ -205,20 +193,8 @@ class AuthService {
 
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        final accessToken = data["access_token"];
-        final refreshToken = data["refresh_token"];
-        final userData = data["user"];
-        if (accessToken is String) {
-          await _prefs?.setString("access_token", accessToken);
-        }
-        if (refreshToken is String) {
-          await _prefs?.setString("refresh_token", refreshToken);
-        }
-        if (userData != null && userData["user_id"] != null) {
-          await _prefs?.setString("user_id", userData["user_id"].toString());
-        }
+        await _saveSession(data);
       }
-
       return response.data;
     } on DioException catch (e) {
       if (e.response != null) {
@@ -233,24 +209,32 @@ class AuthService {
     }
   }
 
+  Future<void> _saveSession(Map<String, dynamic> data) async {
+    final at = data["access_token"];
+    final rt = data["refresh_token"];
+    final user = data["user"];
+    if (at is String) await _prefs?.setString("access_token", at);
+    if (rt is String) await _prefs?.setString("refresh_token", rt);
+    if (user != null && user["user_id"] != null) {
+      await _prefs?.setString("user_id", user["user_id"].toString());
+    }
+  }
+
   Future<void> refreshTokenManual() async {
     final rt = refreshToken;
     if (rt == null) return;
     try {
       final response = await Dio().post(
-        "http://127.0.0.1:3333/auth/refresh",
+        "${AppConfig.baseUrl}/auth/refresh",
         options: Options(headers: {"Authorization": "Bearer $rt"}),
       );
 
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        final newAt = data["access_token"];
-        final newRt = data["refresh_token"];
-        if (newAt is String) await _prefs?.setString("access_token", newAt);
-        if (newRt is String) await _prefs?.setString("refresh_token", newRt);
+        await _saveSession(data);
       }
     } catch (e) {
-      print("Manual refresh failed: $e");
+      debugPrint("Manual refresh failed: $e");
     }
   }
 }

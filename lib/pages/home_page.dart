@@ -1,3 +1,4 @@
+import 'package:shakey/config.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
@@ -5,9 +6,11 @@ import 'package:shakey/models/menu.dart';
 import 'package:shakey/pages/reward_detail_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shakey/models/home_models.dart';
 import 'package:shakey/services/auth_service.dart';
 import 'package:shakey/services/user_service.dart';
 import 'package:shakey/models/user.dart';
+import 'package:shakey/services/banner_service.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
@@ -24,7 +27,7 @@ class _HomePageState extends State<HomePage> {
   List<String> _banners = [];
 
   int get _bannerCount => _banners.length;
-  List<_PromoCoupon> _promoCoupons = [];
+  List<PromoCoupon> _promoCoupons = [];
   bool _isLoadingRewards = true;
   User? _user;
   bool _isLoadingProfile = true;
@@ -43,6 +46,16 @@ class _HomePageState extends State<HomePage> {
     _fetchRewards();
     _userService.addListener(_onUserChanged);
     _fetchProfile();
+    BannerService.instance.addListener(_onBannersChanged);
+    _banners = BannerService.instance.banners;
+  }
+
+  void _onBannersChanged() {
+    if (mounted) {
+      setState(() {
+        _banners = BannerService.instance.banners;
+      });
+    }
   }
 
   void _onUserChanged() {
@@ -117,7 +130,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _fetchRewards() async {
     try {
       final response = await http
-          .get(Uri.parse('http://127.0.0.1:3333/reward'))
+          .get(Uri.parse('${AppConfig.baseUrl}/reward?take=4'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -125,8 +138,7 @@ class _HomePageState extends State<HomePage> {
         if (mounted) {
           setState(() {
             _promoCoupons = data
-                .map((e) => _PromoCoupon.fromJson(e as Map<String, dynamic>))
-                .take(4) // Fetch top 4 for the home page
+                .map((e) => PromoCoupon.fromJson(e as Map<String, dynamic>))
                 .toList();
             _isLoadingRewards = false;
           });
@@ -141,28 +153,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchBanners() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://127.0.0.1:3333/banner'),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        if (mounted && data.isNotEmpty) {
-          setState(() {
-            _banners = data.map((url) => url.toString()).toList();
-            _activeBannerIndex = 0;
-          });
-          // Reset banner timer/controller if necessary
-          if (_bannerController.hasClients) {
-            _bannerController.jumpToPage(0);
-          }
-          _startTimer();
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching banners: $e');
-    }
+    // BannerService handles synchronization now
+    BannerService.instance.getBanners();
   }
 
   void _startTimer() {
@@ -178,6 +170,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _userService.removeListener(_onUserChanged);
+    BannerService.instance.removeListener(_onBannersChanged);
     _bannerTimer?.cancel();
     _bannerController.dispose();
     super.dispose();
@@ -340,7 +333,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openCouponDetail(_PromoCoupon coupon) {
+  void _openCouponDetail(PromoCoupon coupon) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CouponDetailPage(
@@ -357,7 +350,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSectionCard({
-    required _HomeScale scale,
+    required HomeScale scale,
     required Widget child,
     EdgeInsetsGeometry? padding,
     double radius = 12,
@@ -382,7 +375,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTopPanel(_HomeScale scale) {
+  Widget _buildTopPanel(HomeScale scale) {
     return Container(
       color: Colors.transparent,
       padding: EdgeInsets.fromLTRB(
@@ -583,7 +576,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildQuickAction(
-    _HomeScale scale,
+    HomeScale scale,
     String label, {
     VoidCallback? onTap,
   }) {
@@ -609,7 +602,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBannerImage(_HomeScale scale, String imagePath) {
+  Widget _buildBannerImage(HomeScale scale, String imagePath) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -649,12 +642,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBannerCarousel(_HomeScale scale) {
-    // If no banners are loaded yet, show a placeholder or nothing
+  Widget _buildBannerCarousel(HomeScale scale) {
+    // Show cached banners immediately. Only spinner if we truly have 0 banners (first time ever)
     if (_bannerCount == 0) {
       return SizedBox(
         height: scale.h(200),
-        child: Center(
+        child: const Center(
           child: CircularProgressIndicator(
             color: AppColor.primaryRed,
             strokeWidth: 2,
@@ -742,7 +735,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBannerArrowButton({
-    required _HomeScale scale,
+    required HomeScale scale,
     required IconData icon,
     required VoidCallback onTap,
   }) {
@@ -761,7 +754,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildRecentOrder(_HomeScale scale) {
+  Widget _buildRecentOrder(HomeScale scale) {
     return SizedBox(
       height: scale.h(240), // Increased height to accommodate shadow
       child: ListView.separated(
@@ -795,7 +788,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPromoHeader(_HomeScale scale) {
+  Widget _buildPromoHeader(HomeScale scale) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
@@ -832,7 +825,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildRecentOrderHeader(_HomeScale scale) {
+  Widget _buildRecentOrderHeader(HomeScale scale) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         scale.w(16),
@@ -865,7 +858,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildPromoGrid(_HomeScale scale) {
+  Widget _buildPromoGrid(HomeScale scale) {
     if (_isLoadingRewards) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: scale.h(40)),
@@ -1027,7 +1020,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = _HomeScale(context);
+    final scale = HomeScale(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -1045,7 +1038,7 @@ class _HomePageState extends State<HomePage> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ClipPath(
-                  clipper: _TopBgClipper(),
+                  clipper: TopBgClipper(),
                   child: Container(
                     height: scale.h(
                       320,
@@ -1112,81 +1105,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
-
-class _TopBgClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-
-    // Lower the curve so the dip aligns around Reward/Menu quick actions.
-    path.lineTo(0, size.height * 0.80);
-
-    path.cubicTo(
-      size.width * 0.26,
-      size.height * 0.55,
-      size.width * 0.66,
-      size.height * 1.18,
-      size.width,
-      size.height * 0.72,
-    );
-
-    path.lineTo(size.width, 0);
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
-}
-
-class _HomeScale {
-  _HomeScale(this.context)
-    : _ratio = (MediaQuery.sizeOf(context).width / _designWidth).clamp(
-        _minScale,
-        _maxScale,
-      );
-
-  final BuildContext context;
-  final double _ratio;
-
-  static const double _designWidth = 390;
-  static const double _maxScale = 1.25;
-  static const double _minScale = 0.9;
-
-  double w(double value) => value * _ratio;
-  double h(double value) => value * _ratio;
-  double r(double value) => value * _ratio;
-  double sp(double value) => value * _ratio;
-}
-
-// - detail <= description/detail (add this field when backend is ready)
-class _PromoCoupon {
-  factory _PromoCoupon.fromJson(Map<String, dynamic> json) {
-    return _PromoCoupon(
-      rewardId: json['reward_id'] as String? ?? '',
-      imageAsset: json['image'] as String? ?? '',
-      title: json['name'] as String? ?? 'Untitled',
-      validUntil: json['exp_date'] as String? ?? '',
-      points: json['require_point'] as int? ?? 0,
-      condition: json['description'] as String? ?? '',
-    );
-  }
-
-  const _PromoCoupon({
-    required this.rewardId,
-    required this.imageAsset,
-    required this.title,
-    required this.validUntil,
-    required this.points,
-    required this.condition,
-  });
-
-  final String rewardId;
-  final String imageAsset;
-  final String title;
-  final String validUntil;
-  final int points;
-  final String condition;
 }
