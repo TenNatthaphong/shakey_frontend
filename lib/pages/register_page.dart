@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 import 'package:shakey/router.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -23,9 +24,21 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
+    _lang.removeListener(_onLanguageChanged);
     _nameController.dispose();
     _surnameController.dispose();
     _phoneController.dispose();
@@ -48,23 +61,23 @@ class _RegisterPageState extends State<RegisterPage> {
         phone.isEmpty ||
         email.isEmpty ||
         password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_lang.get('fill_all_fields'))));
       return;
     }
 
     if (password != confirm) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      ).showSnackBar(SnackBar(content: Text(_lang.get('passwords_not_match'))));
       return;
     }
 
     if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the terms of agreement')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_lang.get('accept_terms_error'))));
       return;
     }
 
@@ -81,8 +94,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful!'),
+          SnackBar(
+            content: Text(_lang.get('registration_success')),
             backgroundColor: Colors.green,
           ),
         );
@@ -191,7 +204,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Register',
+                          _lang.get('register'),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: titleSize,
@@ -199,51 +212,54 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         SizedBox(height: sectionGap),
-                        _buildLabel('Name', fontSize: labelSize),
+                        _buildLabel(_lang.get('username'), fontSize: labelSize),
                         _buildTextField(
                           controller: _nameController,
-                          hint: 'Name',
+                          hint: _lang.get('username'),
                           fontSize: fieldFontSize,
                           verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel('Surname', fontSize: labelSize),
+                        _buildLabel(_lang.get('surname'), fontSize: labelSize),
                         _buildTextField(
                           controller: _surnameController,
-                          hint: 'Surname',
+                          hint: _lang.get('surname'),
                           fontSize: fieldFontSize,
                           verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel('Tel.', fontSize: labelSize),
+                        _buildLabel(_lang.get('phone'), fontSize: labelSize),
                         _buildTextField(
                           controller: _phoneController,
-                          hint: 'Tel.',
+                          hint: _lang.get('phone'),
                           fontSize: fieldFontSize,
                           verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel('Email', fontSize: labelSize),
+                        _buildLabel(_lang.get('email'), fontSize: labelSize),
                         _buildTextField(
                           controller: _emailController,
-                          hint: 'Email',
+                          hint: _lang.get('email'),
                           fontSize: fieldFontSize,
                           verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel('Password', fontSize: labelSize),
+                        _buildLabel(_lang.get('password'), fontSize: labelSize),
                         _buildTextField(
                           controller: _passwordController,
-                          hint: 'Password',
+                          hint: _lang.get('password'),
                           isPassword: true,
                           fontSize: fieldFontSize,
                           verticalPadding: fieldVerticalPadding,
                         ),
                         SizedBox(height: fieldGap),
-                        _buildLabel('Confirm Password', fontSize: labelSize),
+                        _buildLabel(
+                          _lang.get('confirm_password'),
+                          fontSize: labelSize,
+                        ),
                         _buildTextField(
                           controller: _confirmPasswordController,
-                          hint: 'Confirm Password',
+                          hint: _lang.get('confirm_password'),
                           isPassword: true,
                           isConfirm: true,
                           fontSize: fieldFontSize,
@@ -265,7 +281,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             Expanded(
                               child: Text(
-                                'I accept terms of the agreement',
+                                _lang.get('accept_terms'),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: termsSize,
@@ -295,7 +311,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         color: AppColor.primaryRed,
                                       ),
                                     )
-                                  : const Text('REGISTER'),
+                                  : Text(_lang.get('register').toUpperCase()),
                             ),
                           ),
                         ),
@@ -303,14 +319,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         Center(
                           child: GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
-                            child: const Text.rich(
+                            child: Text.rich(
                               TextSpan(
-                                text: 'Already have an account? ',
-                                style: TextStyle(color: Colors.white),
+                                text: _lang.get('already_have_account'),
+                                style: const TextStyle(color: Colors.white),
                                 children: [
                                   TextSpan(
-                                    text: 'Sign in',
-                                    style: TextStyle(
+                                    text: _lang.get('login'),
+                                    style: const TextStyle(
                                       decoration: TextDecoration.underline,
                                     ),
                                   ),

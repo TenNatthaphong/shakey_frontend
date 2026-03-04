@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 const Size _fixedAppSize = Size(390, 844);
 
@@ -14,8 +15,31 @@ class AppScrollBehavior extends MaterialScrollBehavior {
   };
 }
 
-class ShakeyApp extends StatelessWidget {
+class ShakeyApp extends StatefulWidget {
   const ShakeyApp({super.key});
+
+  @override
+  State<ShakeyApp> createState() => _ShakeyAppState();
+}
+
+class _ShakeyAppState extends State<ShakeyApp> {
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    _lang.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {

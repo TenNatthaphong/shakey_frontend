@@ -5,6 +5,7 @@ import 'package:shakey/pages/reward_detail_page.dart';
 import 'package:shakey/services/reward_service.dart';
 import 'package:shakey/services/auth_service.dart';
 import 'package:shakey/services/user_service.dart';
+import 'package:shakey/services/language_service.dart';
 import 'package:shakey/models/user.dart';
 
 class RewardPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _RewardPageState extends State<RewardPage>
     with SingleTickerProviderStateMixin {
   final RewardService _rewardService = RewardService();
   final UserService _userService = UserService.instance;
+  final _lang = LanguageService.instance;
   late TabController _tabController;
 
   List<MenuReward> _availableRewards = [];
@@ -30,7 +32,12 @@ class _RewardPageState extends State<RewardPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _userService.addListener(_onUserChanged);
+    _lang.addListener(_onLanguageChanged);
     _fetchData();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onUserChanged() {
@@ -43,6 +50,7 @@ class _RewardPageState extends State<RewardPage>
 
   @override
   void dispose() {
+    _lang.removeListener(_onLanguageChanged);
     _userService.removeListener(_onUserChanged);
     _tabController.dispose();
     super.dispose();
@@ -102,17 +110,17 @@ class _RewardPageState extends State<RewardPage>
   }
 
   String _getNextLevelText() {
-    if (_user == null) return 'Join member to earn points';
+    if (_user == null) return _lang.get('join_member_earn');
     final cups = _user!.totalCupsPurchased;
     switch (_user!.member) {
       case MemberLevel.Bronze:
         final remaining = 50 - cups;
-        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Silver';
+        return '${_lang.get('another')} ${remaining > 0 ? remaining : 0} ${_lang.get('cups_to')} ${_lang.get('reach_silver')}';
       case MemberLevel.Silver:
         final remaining = 150 - cups;
-        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Gold';
+        return '${_lang.get('another')} ${remaining > 0 ? remaining : 0} ${_lang.get('cups_to')} ${_lang.get('reach_gold')}';
       case MemberLevel.Gold:
-        return 'You are at the maximum level!';
+        return _lang.get('max_level');
     }
   }
 
@@ -128,25 +136,39 @@ class _RewardPageState extends State<RewardPage>
     }
   }
 
+  String _getLocalizedMemberName(MemberLevel? level) {
+    if (level == null) return _lang.get('bronze_member');
+    switch (level) {
+      case MemberLevel.Bronze:
+        return _lang.get('bronze_member');
+      case MemberLevel.Silver:
+        return _lang.get('silver_member');
+      case MemberLevel.Gold:
+        return _lang.get('gold_member');
+    }
+  }
+
   void _showPrivilegeDialog() {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${_user?.member.name ?? 'Bronze'} Member Privileges'),
-        content: const Column(
+        title: Text(
+          '${_getLocalizedMemberName(_user?.member)} ${_lang.get('privilege')}',
+        ),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('• 10% discount on all drinks'),
-            Text('• Birthday special gift'),
-            Text('• Double points on weekends'),
-            Text('• Exclusive early access to new menus'),
+            Text(_lang.get('privilege_discount')),
+            Text(_lang.get('privilege_birthday')),
+            Text(_lang.get('privilege_double_points')),
+            Text(_lang.get('privilege_early_access')),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(_lang.get('close')),
           ),
         ],
       ),
@@ -190,14 +212,14 @@ class _RewardPageState extends State<RewardPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_user?.member.name ?? 'Bronze'} Member',
+                      _getLocalizedMemberName(_user?.member),
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
                       ),
                     ),
                     Text(
-                      '${_user?.point ?? 0} Points',
+                      '${_user?.point ?? 0} ${_lang.get('points')}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -213,7 +235,7 @@ class _RewardPageState extends State<RewardPage>
                     foregroundColor: Colors.white,
                     elevation: 0,
                   ),
-                  child: const Text('Privilege'),
+                  child: Text(_lang.get('privilege')),
                 ),
               ],
             ),
@@ -250,9 +272,9 @@ class _RewardPageState extends State<RewardPage>
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppColor.primaryRed,
             indicatorSize: TabBarIndicatorSize.label,
-            tabs: const [
-              Tab(text: 'Available'),
-              Tab(text: 'My Rewards'),
+            tabs: [
+              Tab(text: _lang.get('available')),
+              Tab(text: _lang.get('my_rewards')),
             ],
           ),
         ),
@@ -267,7 +289,7 @@ class _RewardPageState extends State<RewardPage>
       );
     }
     if (_availableRewards.isEmpty) {
-      return const Center(child: Text('No rewards available.'));
+      return Center(child: Text(_lang.get('no_rewards_available')));
     }
 
     return GridView.builder(
@@ -285,7 +307,7 @@ class _RewardPageState extends State<RewardPage>
   }
 
   String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return 'No Expiry';
+    if (dateStr == null || dateStr.isEmpty) return _lang.get('no_expiry');
     try {
       // Handle standard ISO 8601 strings
       final dt = DateTime.parse(dateStr);
@@ -304,16 +326,16 @@ class _RewardPageState extends State<RewardPage>
     final user = userService.user;
 
     if (!auth.isAuthenticated || user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login to redeem rewards')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_lang.get('login_redeem_error'))));
       return;
     }
 
     if (user.point < reward.points) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Not enough points!'),
+        SnackBar(
+          content: Text(_lang.get('not_enough_points')),
           backgroundColor: Colors.red,
         ),
       );
@@ -326,15 +348,15 @@ class _RewardPageState extends State<RewardPage>
       await userService.getProfile();
       _fetchData();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Redeemed! Check "My Rewards" tab.'),
+        SnackBar(
+          content: Text(_lang.get('redeemed_success')),
           backgroundColor: Colors.green,
         ),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Already redeemed.')));
+      ).showSnackBar(SnackBar(content: Text(_lang.get('already_redeemed'))));
     }
   }
 
@@ -413,7 +435,7 @@ class _RewardPageState extends State<RewardPage>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Valid until ${_formatDate(reward.expDate)}',
+                    '${_lang.get('valid_until')} ${_formatDate(reward.expDate)}',
                     style: const TextStyle(
                       color: Color(0xFF8A909C),
                       fontSize: 11,
@@ -421,7 +443,7 @@ class _RewardPageState extends State<RewardPage>
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${reward.points} Pts',
+                    '${reward.points} ${_lang.get('pts')}',
                     style: const TextStyle(
                       color: AppColor.primaryRed,
                       fontWeight: FontWeight.w800,
@@ -443,14 +465,15 @@ class _RewardPageState extends State<RewardPage>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.primaryRed,
                     foregroundColor: Colors.white,
+                    shape: const StadiumBorder(),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
                   ),
-                  child: const Text(
-                    'Redeem Now',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  child: Text(
+                    _lang.get('redeem'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
@@ -468,7 +491,7 @@ class _RewardPageState extends State<RewardPage>
       );
     }
     if (_myRewards.isEmpty) {
-      return const Center(child: Text('You don\'t have any rewards yet.'));
+      return Center(child: Text(_lang.get('no_owned_rewards')));
     }
 
     return ListView.builder(
@@ -528,7 +551,7 @@ class _RewardPageState extends State<RewardPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Status: ${userReward.status}',
+                  '${_lang.get('status')}: ${userReward.status}',
                   style: TextStyle(color: Colors.grey[600], fontSize: 11),
                 ),
               ],
@@ -546,7 +569,7 @@ class _RewardPageState extends State<RewardPage>
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: const Text('Use', style: TextStyle(fontSize: 12)),
+            child: Text(_lang.get('use'), style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),

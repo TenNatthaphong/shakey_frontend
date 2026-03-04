@@ -3,6 +3,7 @@ import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/reward_service.dart';
 import 'package:shakey/services/user_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class CouponDetailPage extends StatefulWidget {
   final UserReward? userReward;
@@ -23,6 +24,23 @@ class CouponDetailPage extends StatefulWidget {
 class _CouponDetailPageState extends State<CouponDetailPage> {
   final RewardService _rewardService = RewardService();
   bool _isProcessing = false;
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _lang.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
 
   bool get isPreview => widget.userReward == null;
 
@@ -37,7 +55,7 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
       }
       if (user.point < widget.previewReward!.points) {
         _showError(
-          'Not enough points! You need ${widget.previewReward!.points} Pts.',
+          '${_lang.get('not_enough_points_msg')} ${widget.previewReward!.points} Pts.',
         );
         return;
       }
@@ -55,12 +73,12 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
           await userService.getProfile();
           if (mounted) {
             _showSuccessDialog(
-              'Redeem Successful!',
-              'Your reward is now in "My Rewards"',
+              _lang.get('redeem_success_title'),
+              _lang.get('redeem_success_msg'),
             );
           }
         } else {
-          _showError('Failed to redeem reward.');
+          _showError(_lang.get('failed_redeem'));
         }
       } else {
         // Handle Use
@@ -69,13 +87,13 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
           if (mounted) {
             widget.onUsed?.call();
             _showSuccessDialog(
-              'Reward Used!',
-              'Thank you for using your reward.',
+              _lang.get('reward_used_title'),
+              _lang.get('reward_used_msg'),
               popTwice: true,
             );
           }
         } else {
-          _showError('Failed to use reward.');
+          _showError(_lang.get('failed_use'));
         }
       }
     } finally {
@@ -108,7 +126,7 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                 // Already handled by Navigator.pop(context) above if it's just one level
               }
             },
-            child: const Text('OK'),
+            child: Text(_lang.get('ok')),
           ),
         ],
       ),
@@ -119,12 +137,14 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
   Widget build(BuildContext context) {
     final reward = widget.userReward?.reward ?? widget.previewReward;
     if (reward == null)
-      return const Scaffold(body: Center(child: Text('Invalid Reward')));
+      return Scaffold(body: Center(child: Text(_lang.get('invalid_reward'))));
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(isPreview ? 'Reward Detail' : 'Voucher Detail'),
+        title: Text(
+          isPreview ? _lang.get('reward_detail') : _lang.get('voucher_detail'),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -168,7 +188,7 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Valid until ${reward.expDate ?? 'Unlimited'}',
+                    '${_lang.get('valid_until')} ${reward.expDate ?? 'Unlimited'}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   if (isPreview) ...[
@@ -181,7 +201,7 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${reward.points} Points required',
+                          '${reward.points}${_lang.get('points_required')}',
                           style: const TextStyle(
                             color: AppColor.primaryRed,
                             fontWeight: FontWeight.bold,
@@ -192,13 +212,16 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                     ),
                   ],
                   const Divider(height: 48),
-                  const Text(
-                    'Conditions',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    _lang.get('conditions'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    reward.description ?? 'No specific conditions.',
+                    reward.description ?? _lang.get('no_conditions'),
                     style: const TextStyle(fontSize: 15, height: 1.5),
                   ),
                   const SizedBox(height: 40),
@@ -219,7 +242,9 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                       child: _isProcessing
                           ? const CircularProgressIndicator(color: Colors.white)
                           : Text(
-                              isPreview ? 'Redeem Now' : 'Use Reward Now',
+                              isPreview
+                                  ? _lang.get('redeem_now')
+                                  : _lang.get('use_reward_now'),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -231,8 +256,8 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                   Center(
                     child: Text(
                       isPreview
-                          ? 'Points will be deducted from your account.'
-                          : 'Please show this screen to the staff when ordering.',
+                          ? _lang.get('points_deducted_msg')
+                          : _lang.get('show_to_staff_msg'),
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ),

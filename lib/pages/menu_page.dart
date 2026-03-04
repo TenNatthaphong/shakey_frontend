@@ -5,6 +5,7 @@ import 'package:shakey/router.dart';
 import 'package:shakey/services/cart_service.dart';
 import 'package:shakey/services/menu_service.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 import 'package:shakey/services/user_service.dart';
 import 'package:shakey/models/user.dart';
@@ -19,6 +20,7 @@ class MenuPage extends StatefulWidget {
 class _MenuPageState extends State<MenuPage> {
   final MenuService _menuService = MenuService.instance;
   final CartService _cartService = CartService.instance;
+  final _lang = LanguageService.instance;
 
   // List States
   List<Address> _addresses = [];
@@ -28,7 +30,8 @@ class _MenuPageState extends State<MenuPage> {
 
   // Filters State
   String selectedCategory = 'For You';
-  final List<String> categories = [
+
+  static const List<String> _categoryKeys = [
     'Today\'s Offer',
     'For You',
     'Favorites',
@@ -37,6 +40,13 @@ class _MenuPageState extends State<MenuPage> {
     'Milk Tea',
     'Fruit Tea',
   ];
+
+  String _getCategoryLangKey(String cat) {
+    if (cat == 'For You') return 'cat_for_you';
+    if (cat == 'Today\'s Offer') return 'cat_today_offer';
+    return 'cat_${cat.toLowerCase().replaceAll(' ', '_').replaceAll('\'', '')}';
+  }
+
   bool isVegetarian = false;
   bool isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -52,7 +62,13 @@ class _MenuPageState extends State<MenuPage> {
     super.initState();
     _cartService.addListener(_onCartChanged);
     _menuService.addListener(_onMenuServiceChanged);
+    _lang.addListener(_onLanguageChanged);
+    selectedCategory = 'For You';
     _fetchMenus();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onMenuServiceChanged() {
@@ -136,6 +152,7 @@ class _MenuPageState extends State<MenuPage> {
 
   @override
   void dispose() {
+    _lang.removeListener(_onLanguageChanged);
     _cartService.removeListener(_onCartChanged);
     _menuService.removeListener(_onMenuServiceChanged);
     _searchController.dispose();
@@ -153,8 +170,8 @@ class _MenuPageState extends State<MenuPage> {
   Future<void> _toggleFavorite(Menu menu) async {
     if (!AuthService.instance.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please log in to save favorites'),
+        SnackBar(
+          content: Text(_lang.get('login_fav_error')),
           backgroundColor: AppColor.primaryRed,
         ),
       );
@@ -222,9 +239,9 @@ class _MenuPageState extends State<MenuPage> {
                                     16,
                                   ),
                                   child: Text(
-                                    selectedCategory == 'For You'
-                                        ? 'For You'
-                                        : selectedCategory,
+                                    _lang.get(
+                                      _getCategoryLangKey(selectedCategory),
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
@@ -274,9 +291,9 @@ class _MenuPageState extends State<MenuPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Order',
-                          style: TextStyle(
+                        Text(
+                          _lang.get('order'),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -284,7 +301,9 @@ class _MenuPageState extends State<MenuPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _cartService.isDelivery ? 'Deliver now' : 'Pick up',
+                          _lang.get(
+                            _cartService.isDelivery ? 'deliver_now' : 'pick_up',
+                          ),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -377,9 +396,9 @@ class _MenuPageState extends State<MenuPage> {
                                         ),
                                       ),
                                       const SizedBox(width: 12),
-                                      const Text(
-                                        'Add new address',
-                                        style: TextStyle(
+                                      Text(
+                                        _lang.get('add_new_address'),
+                                        style: const TextStyle(
                                           color: AppColor.primaryRed,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
@@ -451,11 +470,11 @@ class _MenuPageState extends State<MenuPage> {
                                   child: Text(
                                     _cartService.isDelivery
                                         ? (_cartService.selectedAddress?.name ??
-                                              'Select Address')
+                                              _lang.get('select_address'))
                                         : (_cartService
                                                   .selectedBranch
                                                   ?.detail ??
-                                              'Select Branch'),
+                                              _lang.get('select_branch')),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 15,
@@ -524,10 +543,10 @@ class _MenuPageState extends State<MenuPage> {
                                 textAlignVertical: TextAlignVertical.center,
                                 onChanged: (val) =>
                                     setState(() => searchQuery = val),
-                                decoration: const InputDecoration(
-                                  hintText: 'Search...',
+                                decoration: InputDecoration(
+                                  hintText: _lang.get('search_hint'),
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
                                   isDense: true,
@@ -580,10 +599,12 @@ class _MenuPageState extends State<MenuPage> {
                                   setState(() => selectedCategory = cat);
                                 },
                                 itemBuilder: (BuildContext context) {
-                                  return categories.map((String cat) {
+                                  return _categoryKeys.map((String cat) {
                                     return PopupMenuItem<String>(
                                       value: cat,
-                                      child: Text(cat),
+                                      child: Text(
+                                        _lang.get(_getCategoryLangKey(cat)),
+                                      ),
                                     );
                                   }).toList();
                                 },
@@ -595,7 +616,11 @@ class _MenuPageState extends State<MenuPage> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          selectedCategory,
+                                          _lang.get(
+                                            _getCategoryLangKey(
+                                              selectedCategory,
+                                            ),
+                                          ),
                                           style: const TextStyle(
                                             color: AppColor.primaryRed,
                                             fontWeight: FontWeight.bold,
@@ -638,7 +663,7 @@ class _MenuPageState extends State<MenuPage> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Vegetarian',
+                                      _lang.get('vegetarian'),
                                       style: TextStyle(
                                         color: isVegetarian
                                             ? AppColor.primaryRed
@@ -661,14 +686,14 @@ class _MenuPageState extends State<MenuPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildModeToggleButton(
-                      'Deliver now',
+                      _lang.get('deliver_now'),
                       Icons.directions_car,
                       _cartService.isDelivery,
                       () => _cartService.setDeliveryMode(true),
                     ),
                     const SizedBox(width: 16),
                     _buildModeToggleButton(
-                      'Pick up',
+                      _lang.get('pick_up'),
                       Icons.storefront,
                       !_cartService.isDelivery,
                       () => _cartService.setDeliveryMode(false),
@@ -738,19 +763,23 @@ class _MenuPageState extends State<MenuPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(existing == null ? 'Add Address' : 'Edit Address'),
+        title: Text(
+          existing == null
+              ? _lang.get('add_address_title')
+              : _lang.get('edit_address_title'),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Address Name (e.g. Home, Work)',
-              ),
+              decoration: InputDecoration(labelText: _lang.get('address_name')),
             ),
             TextField(
               controller: detailController,
-              decoration: const InputDecoration(labelText: 'Detail Address'),
+              decoration: InputDecoration(
+                labelText: _lang.get('detail_address'),
+              ),
             ),
           ],
         ),
@@ -767,11 +796,14 @@ class _MenuPageState extends State<MenuPage> {
                   }
                 }
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(
+                _lang.get('delete'),
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(_lang.get('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1035,12 +1067,15 @@ class _MenuPageState extends State<MenuPage> {
     final menus = _filteredMenus;
 
     if (menus.isEmpty && searchQuery.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.only(top: 100),
+      return Padding(
+        padding: const EdgeInsets.only(top: 100),
         child: Center(
           child: Text(
-            'No items found in this category.',
-            style: TextStyle(color: Colors.grey, fontSize: 16),
+            _lang.t(
+              'No items found in this category.',
+              'ไม่พบรายการในหมวดหมู่นี้',
+            ),
+            style: const TextStyle(color: Colors.grey, fontSize: 16),
           ),
         ),
       );

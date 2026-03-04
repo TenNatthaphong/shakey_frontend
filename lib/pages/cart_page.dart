@@ -2,18 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/cart_service.dart';
+import 'package:shakey/services/language_service.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    _lang.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'My Basket',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: Text(
+          _lang.get('my_basket'),
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -62,9 +89,9 @@ class CartPage extends StatelessWidget {
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Your basket is empty',
-            style: TextStyle(
+          Text(
+            _lang.get('cart_empty'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black54,
@@ -81,7 +108,7 @@ class CartPage extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             ),
-            child: const Text('Go explore menu'),
+            child: Text(_lang.get('go_explore')),
           ),
         ],
       ),
@@ -117,19 +144,19 @@ class CartPage extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Size: ${item.variant?.name ?? "Regular"}, ${item.sweetness}',
+                '${_lang.get('size')}: ${item.variant?.name ?? _lang.get('variant_normal')}, ${item.sweetness.replaceAll('Sweet', _lang.isThai ? 'หวาน' : 'Sweet')}',
                 style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
               ),
               if (item.selectedToppings.isNotEmpty)
                 Text(
-                  'Toppings: ${item.selectedToppings.map((t) => t.name).join(', ')}',
+                  '${_lang.get('toppings')}: ${item.selectedToppings.map((t) => t.name).join(', ')}',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               if (item.note != null && item.note!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    'Note: ${item.note}',
+                    '${_lang.get('note')}: ${item.note}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.orange.shade800,
@@ -199,9 +226,12 @@ class CartPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Total Amount',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  _lang.get('total_amount'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   '\$${totalPrice.toStringAsFixed(0)}',
@@ -228,9 +258,9 @@ class CartPage extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Checkout',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Text(
+                  _lang.get('checkout'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),

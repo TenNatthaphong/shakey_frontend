@@ -11,6 +11,11 @@ import 'package:shakey/pages/forgot_password_page.dart';
 import 'package:shakey/pages/otp_verification_page.dart';
 import 'package:shakey/pages/reset_password_page.dart';
 import 'package:shakey/pages/checkout_page.dart';
+import 'package:shakey/pages/terms_and_conditions_page.dart';
+import 'package:shakey/pages/faq_page.dart';
+import 'package:shakey/pages/contact_page.dart';
+import 'package:shakey/pages/help_page.dart';
+import 'package:shakey/pages/setting_page.dart';
 import 'package:shakey/models/menu.dart';
 
 import 'package:shakey/layout/main_layout.dart';
@@ -29,6 +34,11 @@ class AppRoutes {
   static const otpVerificationPage = '/otp-verification';
   static const resetPasswordPage = '/reset-password';
   static const checkoutPage = '/checkout';
+  static const termsAndConditionsPage = '/terms-and-conditions';
+  static const faqPage = '/faq';
+  static const contactPage = '/contact';
+  static const helpPage = '/help';
+  static const settingPage = '/setting';
 }
 
 class AppRouter {
@@ -62,6 +72,23 @@ class AppRouter {
 
       case AppRoutes.checkoutPage:
         return MaterialPageRoute(builder: (context) => const CheckoutPage());
+
+      case AppRoutes.termsAndConditionsPage:
+        return MaterialPageRoute(
+          builder: (context) => const TermsAndConditionsPage(),
+        );
+
+      case AppRoutes.faqPage:
+        return MaterialPageRoute(builder: (context) => const FaqPage());
+
+      case AppRoutes.contactPage:
+        return MaterialPageRoute(builder: (context) => const ContactPage());
+
+      case AppRoutes.helpPage:
+        return MaterialPageRoute(builder: (context) => const HelpPage());
+
+      case AppRoutes.settingPage:
+        return MaterialPageRoute(builder: (context) => const SettingPage());
 
       case AppRoutes.pinPage:
         final args = settings.arguments as Map<String, dynamic>?;

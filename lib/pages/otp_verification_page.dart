@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String email;
@@ -18,6 +19,17 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   bool _isLoading = false;
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
@@ -27,15 +39,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     for (var node in _focusNodes) {
       node.dispose();
     }
+    _lang.removeListener(_onLanguageChanged);
     super.dispose();
   }
 
   Future<void> _onVerify() async {
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the full 6-digit OTP')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_lang.get('enter_full_otp'))));
       return;
     }
 
@@ -79,9 +92,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 40),
-            const Text(
-              'OTP Verification',
-              style: TextStyle(
+            Text(
+              _lang.get('otp_verification'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
@@ -89,7 +102,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Enter the 6-digit code sent to ${widget.email}',
+              '${_lang.get('enter_otp_sent_to')} ${widget.email}',
               style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
             const SizedBox(height: 48),
@@ -155,9 +168,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                           color: AppColor.primaryRed,
                         ),
                       )
-                    : const Text(
-                        'VERIFY',
-                        style: TextStyle(
+                    : Text(
+                        _lang.get('verify'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),

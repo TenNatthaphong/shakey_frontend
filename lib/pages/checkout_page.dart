@@ -4,6 +4,7 @@ import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/cart_service.dart';
 import 'package:shakey/services/menu_service.dart';
 import 'package:shakey/services/user_service.dart';
+import 'package:shakey/services/language_service.dart';
 import 'package:shakey/widgets/qr_payment_popup.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -15,7 +16,24 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   final MenuService _menuService = MenuService.instance;
+  final _lang = LanguageService.instance;
   bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    _lang.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   void _showPaymentPopup() {
     showDialog(
@@ -65,8 +83,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         _showSuccessDialog();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to place order. Please try again.'),
+          SnackBar(
+            content: Text(_lang.get('failed_order')),
             backgroundColor: AppColor.primaryRed,
           ),
         );
@@ -82,15 +100,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Column(
+        title: Column(
           children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 64),
-            SizedBox(height: 16),
-            Text('Order Placed!'),
+            const Icon(Icons.check_circle, color: Colors.green, size: 64),
+            const SizedBox(height: 16),
+            Text(_lang.get('order_placed')),
           ],
         ),
-        content: const Text(
-          'Your order has been placed successfully. You can track it in your orders history.',
+        content: Text(
+          _lang.get('order_success_msg'),
           textAlign: TextAlign.center,
         ),
         actions: [
@@ -107,7 +125,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Back to Home'),
+              child: Text(_lang.get('back_to_home')),
             ),
           ),
         ],
@@ -123,9 +141,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text(
-          'Checkout',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: Text(
+          _lang.get('checkout'),
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -144,9 +165,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Order Summary',
-                        style: TextStyle(
+                      Text(
+                        _lang.get('summary'),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -184,7 +205,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         children: [
                                           Text(item.menu.name),
                                           Text(
-                                            '${item.variant?.name ?? "Regular"}, ${item.sweetness}',
+                                            '${item.variant?.name ?? _lang.get('variant_normal')}, ${item.sweetness.replaceAll('Sweet', _lang.isThai ? "หวาน" : "Sweet")}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey.shade600,
@@ -204,8 +225,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Total',
+                                Text(
+                                  _lang.get('total'),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -225,8 +246,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      const Text(
-                        'Payment Method',
+                      Text(
+                        _lang.get('payment_method'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -240,13 +261,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: AppColor.primaryRed),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.qr_code, color: AppColor.primaryRed),
-                            SizedBox(width: 16),
+                            const Icon(
+                              Icons.qr_code,
+                              color: AppColor.primaryRed,
+                            ),
+                            const SizedBox(width: 16),
                             Text(
-                              'QR Payment',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              _lang.get('qr_payment'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Spacer(),
                             Icon(
@@ -291,9 +317,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Pay Now',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          : Text(
+                              _lang.get('pay_now'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                   ),

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/models/user.dart';
 import 'package:shakey/services/user_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final User user;
@@ -22,6 +23,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   DateTime? _selectedBirthday;
   bool _isLoading = false;
   final UserService _userService = UserService.instance;
+  final _lang = LanguageService.instance;
 
   @override
   void initState() {
@@ -34,6 +36,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _birthdayController = TextEditingController(
       text: _formatDateDisplay(_selectedBirthday),
     );
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   String _formatDateDisplay(DateTime? date) {
@@ -67,14 +74,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.grey),
+                    child: Text(
+                      _lang.get('cancel'),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
-                  const Text(
-                    'Select Birthday',
-                    style: TextStyle(
+                  Text(
+                    _lang.get('select_birthday'),
+                    style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -89,9 +96,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       });
                       Navigator.of(context).pop();
                     },
-                    child: const Text(
-                      'Confirm',
-                      style: TextStyle(
+                    child: Text(
+                      _lang.get('confirm'),
+                      style: const TextStyle(
                         color: AppColor.primaryRed,
                         fontWeight: FontWeight.bold,
                       ),
@@ -125,6 +132,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _lastnameController.dispose();
     _phoneController.dispose();
     _birthdayController.dispose();
+    _lang.removeListener(_onLanguageChanged);
     super.dispose();
   }
 
@@ -148,15 +156,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_lang.get('profile_updated'))));
         Navigator.of(
           context,
         ).pop(true); // Return true to indicate refresh needed
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update profile')),
+          SnackBar(content: Text(_lang.get('profile_update_failed'))),
         );
       }
     }
@@ -167,9 +175,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: Text(
+          _lang.get('edit_profile'),
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -185,48 +196,51 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildFieldLabel('Username'),
+              _buildFieldLabel(_lang.get('username')),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: _usernameController,
-                hint: 'Enter username',
-                validator: (v) => v!.isEmpty ? 'Please enter username' : null,
+                hint: _lang.get('enter_username'),
+                validator: (v) =>
+                    v!.isEmpty ? _lang.get('please_enter_username') : null,
               ),
               const SizedBox(height: 20),
-              _buildFieldLabel('First Name'),
+              _buildFieldLabel(_lang.get('first_name')),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: _firstnameController,
-                hint: 'Enter first name',
-                validator: (v) => v!.isEmpty ? 'Please enter first name' : null,
+                hint: _lang.get('enter_first_name'),
+                validator: (v) =>
+                    v!.isEmpty ? _lang.get('please_enter_first_name') : null,
               ),
               const SizedBox(height: 20),
-              _buildFieldLabel('Last Name'),
+              _buildFieldLabel(_lang.get('last_name')),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: _lastnameController,
-                hint: 'Enter last name',
-                validator: (v) => v!.isEmpty ? 'Please enter last name' : null,
+                hint: _lang.get('enter_last_name'),
+                validator: (v) =>
+                    v!.isEmpty ? _lang.get('please_enter_last_name') : null,
               ),
               const SizedBox(height: 20),
-              _buildFieldLabel('Phone Number'),
+              _buildFieldLabel(_lang.get('phone_number')),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: _phoneController,
-                hint: 'Enter phone number',
+                hint: _lang.get('enter_phone_number'),
                 keyboardType: TextInputType.phone,
                 validator: (v) =>
-                    v!.isEmpty ? 'Please enter phone number' : null,
+                    v!.isEmpty ? _lang.get('please_enter_phone_number') : null,
               ),
               const SizedBox(height: 20),
-              _buildFieldLabel('Birthday'),
+              _buildFieldLabel(_lang.get('birthday')),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: _selectDate,
                 child: AbsorbPointer(
                   child: _buildTextField(
                     controller: _birthdayController,
-                    hint: 'Select birthday',
+                    hint: _lang.get('select_birthday'),
                     suffixIcon: const Icon(Icons.calendar_today, size: 20),
                   ),
                 ),
@@ -253,9 +267,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'SAVE CHANGES',
-                          style: TextStyle(
+                      : Text(
+                          _lang.get('save_changes'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),

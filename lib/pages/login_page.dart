@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,9 +17,21 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
+    _lang.removeListener(_onLanguageChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -30,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email and password')),
+        SnackBar(content: Text(_lang.get('enter_email_password'))),
       );
       return;
     }
@@ -167,18 +180,18 @@ class _LoginPageState extends State<LoginPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text(
-                              'Sign In',
-                              style: TextStyle(
+                            Text(
+                              _lang.get('sign_in'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
                             SizedBox(height: sectionGap),
-                            const Text(
-                              'Email',
-                              style: TextStyle(
+                            Text(
+                              _lang.get('email'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
                               ),
@@ -186,13 +199,13 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 6),
                             _buildTextField(
                               controller: _emailController,
-                              hint: 'Email',
+                              hint: _lang.get('email'),
                               icon: Icons.email_outlined,
                             ),
                             SizedBox(height: fieldGap),
-                            const Text(
-                              'Password',
-                              style: TextStyle(
+                            Text(
+                              _lang.get('password'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
                               ),
@@ -200,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 6),
                             _buildTextField(
                               controller: _passwordController,
-                              hint: 'Password',
+                              hint: _lang.get('password'),
                               icon: Icons.lock_outline,
                               isPassword: true,
                             ),
@@ -212,9 +225,9 @@ class _LoginPageState extends State<LoginPage> {
                                     context,
                                   ).pushNamed(AppRoutes.forgotPasswordPage);
                                 },
-                                child: const Text(
-                                  'Forgot Password?',
-                                  style: TextStyle(
+                                child: Text(
+                                  _lang.get('forgot_password'),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
                                   ),
@@ -242,9 +255,9 @@ class _LoginPageState extends State<LoginPage> {
                                           color: AppColor.primaryRed,
                                         ),
                                       )
-                                    : const Text(
-                                        'Login',
-                                        style: TextStyle(
+                                    : Text(
+                                        _lang.get('login'),
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 16,
                                         ),
@@ -255,17 +268,17 @@ class _LoginPageState extends State<LoginPage> {
                             Center(
                               child: GestureDetector(
                                 onTap: _onRegister,
-                                child: const Text.rich(
+                                child: Text.rich(
                                   TextSpan(
-                                    text: 'No account yet? ',
-                                    style: TextStyle(
+                                    text: _lang.get('no_account_yet'),
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,
                                     ),
                                     children: [
                                       TextSpan(
-                                        text: 'Register',
-                                        style: TextStyle(
+                                        text: _lang.get('register'),
+                                        style: const TextStyle(
                                           decoration: TextDecoration.underline,
                                         ),
                                       ),
@@ -285,7 +298,7 @@ class _LoginPageState extends State<LoginPage> {
                                     horizontal: 10,
                                   ),
                                   child: Text(
-                                    'or login with',
+                                    _lang.get('or_login_with'),
                                     style: TextStyle(
                                       color: Colors.white.withValues(
                                         alpha: 0.8,

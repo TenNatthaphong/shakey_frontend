@@ -14,6 +14,7 @@ import 'package:shakey/services/user_service.dart';
 import 'package:shakey/models/user.dart';
 import 'package:shakey/services/banner_service.dart';
 import 'package:shakey/services/menu_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onTabSelected;
@@ -40,6 +41,7 @@ class _HomePageState extends State<HomePage> {
   List<Order> _recentOrders = [];
   bool _isLoadingOrders = true;
   final MenuService _menuService = MenuService.instance;
+  final _lang = LanguageService.instance;
 
   @override
   void initState() {
@@ -54,6 +56,11 @@ class _HomePageState extends State<HomePage> {
     _banners = BannerService.instance.banners;
     _fetchRecentOrders();
     CartService.instance.addListener(_onCartChanged);
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onCartChanged() {
@@ -132,17 +139,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _getNextLevelText() {
-    if (_user == null) return 'Join member to earn points';
+    if (_user == null) return _lang.get('join_member_earn');
     final cups = _user!.totalCupsPurchased;
     switch (_user!.member) {
       case MemberLevel.Bronze:
         final remaining = 50 - cups;
-        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Silver';
+        return '${_lang.get('another')} ${remaining > 0 ? remaining : 0} ${_lang.get('cups_to')} ${_lang.get('reach_silver')}';
       case MemberLevel.Silver:
         final remaining = 150 - cups;
-        return 'Another ${remaining > 0 ? remaining : 0} cups to reach Gold';
+        return '${_lang.get('another')} ${remaining > 0 ? remaining : 0} ${_lang.get('cups_to')} ${_lang.get('reach_gold')}';
       case MemberLevel.Gold:
-        return 'You are at the maximum level!';
+        return _lang.get('max_level');
     }
   }
 
@@ -229,7 +236,7 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        content: Text('Scanned QR: $scannedCode'),
+        content: Text('${_lang.get('scanned_qr_msg')}$scannedCode'),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -257,10 +264,10 @@ class _HomePageState extends State<HomePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Mock QR Scanner',
+                Text(
+                  _lang.get('mock_qr_scanner'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 20,
@@ -294,10 +301,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Demo mode: tap "Scan Success" to simulate QR result',
+                Text(
+                  _lang.get('demo_mode_msg'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 14),
                 Row(
@@ -309,7 +316,7 @@ class _HomePageState extends State<HomePage> {
                           foregroundColor: Colors.white,
                           side: const BorderSide(color: Colors.white38),
                         ),
-                        child: const Text('Cancel'),
+                        child: Text(_lang.get('cancel')),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -322,7 +329,7 @@ class _HomePageState extends State<HomePage> {
                           backgroundColor: AppColor.primaryRed,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Scan Success'),
+                        child: Text(_lang.get('scan_success')),
                       ),
                     ),
                   ],
@@ -335,26 +342,39 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String _getLocalizedMemberName(MemberLevel? level) {
+    if (level == null) return _lang.get('bronze_member');
+    switch (level) {
+      case MemberLevel.Bronze:
+        return _lang.get('bronze_member');
+      case MemberLevel.Silver:
+        return _lang.get('silver_member');
+      case MemberLevel.Gold:
+        return _lang.get('gold_member');
+    }
+  }
+
   void _showPrivilegeDialog() {
-    final memberName = _user?.member.name ?? 'Bronze';
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('$memberName Member Privileges'),
-        content: const Column(
+        title: Text(
+          '${_getLocalizedMemberName(_user?.member)} ${_lang.get('privilege')}',
+        ),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('• 10% discount on all drinks'),
-            Text('• Birthday special gift'),
-            Text('• Double points on weekends'),
-            Text('• Exclusive early access to new menus'),
+            Text(_lang.get('privilege_discount')),
+            Text(_lang.get('privilege_birthday')),
+            Text(_lang.get('privilege_double_points')),
+            Text(_lang.get('privilege_early_access')),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(_lang.get('close')),
           ),
         ],
       ),
@@ -444,7 +464,7 @@ class _HomePageState extends State<HomePage> {
                           )
                         else
                           Text(
-                            _user?.username ?? 'Guest',
+                            _user?.username ?? _lang.get('guest'),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: scale.sp(20),
@@ -480,7 +500,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(width: scale.w(8)),
                         Text(
-                          'Earn Point',
+                          _lang.get('earn_point'),
                           style: TextStyle(
                             color: AppColor.primaryRed,
                             fontWeight: FontWeight.w700,
@@ -513,7 +533,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${_user?.member.name ?? 'Bronze'} Member',
+                          _getLocalizedMemberName(_user?.member),
                           style: TextStyle(
                             color: _getMemberColor(),
                             fontWeight: FontWeight.w700,
@@ -523,7 +543,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: scale.h(4)),
                         Text(
-                          '${_user?.point ?? 0} Points',
+                          '${_user?.point ?? 0} ${_lang.get('points')}',
                           style: TextStyle(
                             color: AppColor.primaryRed,
                             fontWeight: FontWeight.w800,
@@ -545,7 +565,7 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(scale.r(20)),
                         ),
                         child: Text(
-                          'Privilege',
+                          _lang.get('privilege'),
                           style: TextStyle(
                             color: AppColor.primaryRed,
                             fontWeight: FontWeight.w700,
@@ -605,22 +625,90 @@ class _HomePageState extends State<HomePage> {
   Widget _buildQuickAction(
     HomeScale scale,
     String label, {
+    IconData? icon,
     VoidCallback? onTap,
   }) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: _buildSectionCard(
-          scale: scale,
-          gradient: AppColor.backgroundGradient,
-          padding: EdgeInsets.symmetric(vertical: scale.h(12)),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: const Color(0xFF1E1E1E),
-                fontWeight: FontWeight.w600,
-                fontSize: scale.sp(22),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(scale.r(24)),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFFFFF),
+              Color(0xFFFDFBF5), // Very soft cream
+              Color(0xFFF2E5CC), // Elegant warm beige
+            ],
+            stops: [0.0, 0.4, 1.0],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 24,
+              offset: Offset(0, scale.h(12)),
+            ),
+            BoxShadow(
+              color: AppColor.primaryRed.withValues(alpha: 0.08),
+              blurRadius: 20,
+              offset: Offset(0, scale.h(8)),
+            ),
+            BoxShadow(
+              // Soft top rim light
+              color: Colors.white,
+              blurRadius: 10,
+              offset: const Offset(-2, -2),
+            ),
+          ],
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(scale.r(24)),
+            splashColor: AppColor.primaryRed.withValues(alpha: 0.12),
+            highlightColor: Colors.white.withValues(alpha: 0.4),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: scale.h(14),
+                horizontal: scale.w(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Container(
+                      padding: EdgeInsets.all(scale.r(8)),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        icon,
+                        color: AppColor.primaryRed,
+                        size: scale.sp(20),
+                      ),
+                    ),
+                    SizedBox(width: scale.w(10)),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: const Color(0xFF2C2C2C),
+                      fontWeight: FontWeight.w800,
+                      fontSize: scale.sp(17),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -800,7 +888,7 @@ class _HomePageState extends State<HomePage> {
           ),
           child: Center(
             child: Text(
-              'No recent orders yet',
+              _lang.get('no_recent_orders'),
               style: TextStyle(color: Colors.grey, fontSize: scale.sp(14)),
             ),
           ),
@@ -809,14 +897,14 @@ class _HomePageState extends State<HomePage> {
     }
 
     return SizedBox(
-      height: scale.h(200),
+      height: scale.h(260), // Increased height for vertical menu-style card
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         clipBehavior: Clip.none,
         itemCount: _recentOrders.length,
         padding: EdgeInsets.fromLTRB(scale.w(16), 0, scale.w(16), scale.h(15)),
-        separatorBuilder: (_, _) => SizedBox(width: scale.w(15)),
+        separatorBuilder: (_, _) => SizedBox(width: scale.w(16)),
         itemBuilder: (_, index) {
           return _buildRecentOrderCard(scale, _recentOrders[index]);
         },
@@ -828,154 +916,196 @@ class _HomePageState extends State<HomePage> {
     final firstItem = order.items.isNotEmpty ? order.items.first : null;
     final otherItemsCount = order.items.length - 1;
 
-    return InkWell(
-      onTap: firstItem != null
-          ? () async {
-              final added = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MenuDetailPage(menu: firstItem.menu),
-                ),
-              );
-              if (added == true) {
-                widget.onTabSelected?.call(1);
-              }
-            }
-          : null,
-      borderRadius: BorderRadius.circular(scale.r(20)),
-      child: Container(
-        width: scale.w(220),
-        padding: EdgeInsets.all(scale.r(14)),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(scale.r(20)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: scale.r(15),
-              offset: Offset(0, scale.h(6)),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(scale.r(12)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(scale.r(12)),
-                    child:
-                        (firstItem?.menu.imagePath.startsWith('http') ?? false)
-                        ? Image.network(
-                            firstItem!.menu.imagePath,
-                            width: scale.w(52),
-                            height: scale.w(52),
-                            fit: BoxFit.cover,
-                          )
-                        : Image.asset(
-                            firstItem?.menu.imagePath ??
-                                'assets/images/Chocolate.png',
-                            width: scale.w(52),
-                            height: scale.w(52),
-                            fit: BoxFit.cover,
+    return Container(
+      width: scale.w(
+        170,
+      ), // Width matching roughly half the screen like menu grid
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(scale.r(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: scale.r(15),
+            offset: Offset(0, scale.h(8)),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(scale.r(12)),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(scale.r(24)),
+              child: InkWell(
+                onTap: firstItem != null
+                    ? () async {
+                        final added = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MenuDetailPage(menu: firstItem.menu),
                           ),
-                  ),
-                ),
-                SizedBox(width: scale.w(12)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        firstItem?.menu.name ?? 'Order',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: scale.sp(15),
-                          color: const Color(0xFF2F3B59),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        otherItemsCount > 0
-                            ? '+$otherItemsCount more items'
-                            : '1 item',
-                        style: TextStyle(
-                          fontSize: scale.sp(12),
-                          color: Colors.blueGrey.shade400,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Container(
-              height: 1,
-              color: Colors.grey.shade100,
-              margin: EdgeInsets.symmetric(vertical: scale.h(4)),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+                        );
+                        if (added == true) {
+                          widget.onTabSelected?.call(1);
+                        }
+                      }
+                    : null,
+                borderRadius: BorderRadius.circular(scale.r(24)),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Total Price',
-                      style: TextStyle(
-                        fontSize: scale.sp(10),
-                        color: Colors.grey.shade400,
-                        fontWeight: FontWeight.bold,
+                    // Image Section
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            decoration: BoxDecoration(
+                              color: AppColor.cream,
+                              borderRadius: BorderRadius.circular(scale.r(18)),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(scale.r(18)),
+                              child:
+                                  (firstItem?.menu.imagePath.startsWith(
+                                        'http',
+                                      ) ??
+                                      false)
+                                  ? Image.network(
+                                      firstItem!.menu.imagePath,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) =>
+                                          const Icon(
+                                            Icons.broken_image,
+                                            size: 50,
+                                          ),
+                                    )
+                                  : Image.asset(
+                                      firstItem?.menu.imagePath ??
+                                          'assets/images/Chocolate.png',
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ),
+                          // Badge (Delivery/Pickup)
+                          Positioned(
+                            top: scale.h(8),
+                            left: scale.w(8),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: scale.w(8),
+                                vertical: scale.h(4),
+                              ),
+                              decoration: BoxDecoration(
+                                color: order.delivery
+                                    ? Colors.blue
+                                    : Colors.orange,
+                                borderRadius: BorderRadius.circular(scale.r(8)),
+                              ),
+                              child: Text(
+                                order.delivery
+                                    ? _lang.get('delivery')
+                                    : _lang.get('pickup'),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: scale.sp(9),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Reorder Action Button
+                          Positioned(
+                            bottom: scale.h(6),
+                            right: scale.w(6),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  // Simplified reorder action: re-add first item or push to menu detail
+                                  if (firstItem != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MenuDetailPage(
+                                          menu: firstItem.menu,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(
+                                  scale.r(20),
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.all(scale.r(6)),
+                                  decoration: const BoxDecoration(
+                                    color: AppColor.primaryRed,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.refresh_rounded,
+                                    color: Colors.white,
+                                    size: scale.sp(16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    SizedBox(height: scale.h(12)),
+                    // Text Section
                     Text(
-                      '\$${order.totalPrice}',
+                      firstItem?.menu.name ?? _lang.get('order'),
                       style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: AppColor.primaryRed,
-                        fontSize: scale.sp(16),
+                        fontSize: scale.sp(15),
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                        height: 1.1,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: scale.h(4)),
+                    Text(
+                      otherItemsCount > 0
+                          ? _lang
+                                .get('items_more')
+                                .replaceFirst('{n}', otherItemsCount.toString())
+                          : _lang.get('one_item'),
+                      style: TextStyle(
+                        fontSize: scale.sp(11),
+                        color: Colors.grey.shade500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: scale.h(6)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '\$${order.totalPrice.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: scale.sp(16),
+                            fontWeight: FontWeight.w900,
+                            color: AppColor.primaryRed,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: scale.w(10),
-                    vertical: scale.h(6),
-                  ),
-                  decoration: BoxDecoration(
-                    color: (order.delivery ? Colors.blue : Colors.orange)
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(scale.r(10)),
-                  ),
-                  child: Text(
-                    order.delivery ? 'Delivery' : 'Pickup',
-                    style: TextStyle(
-                      fontSize: scale.sp(10),
-                      fontWeight: FontWeight.w800,
-                      color: (order.delivery ? Colors.blue : Colors.orange),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -992,7 +1122,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Expanded(
             child: Text(
-              'Rewards for you',
+              _lang.get('rewards_for_you'),
               style: TextStyle(
                 color: const Color(0xFF2F3B59),
                 fontWeight: FontWeight.w800,
@@ -1004,7 +1134,7 @@ class _HomePageState extends State<HomePage> {
           GestureDetector(
             onTap: () => widget.onTabSelected?.call(2),
             child: Text(
-              'See all',
+              _lang.get('see_all'),
               style: TextStyle(
                 color: const Color(0xFF4F86D9),
                 fontWeight: FontWeight.w600,
@@ -1028,7 +1158,7 @@ class _HomePageState extends State<HomePage> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          'Recent Order',
+          _lang.get('recent_order_header'),
           style: TextStyle(
             color: const Color(0xFF2F3B59),
             fontWeight: FontWeight.w800,
@@ -1041,7 +1171,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return 'No Expiry';
+    if (dateStr == null || dateStr.isEmpty) return _lang.get('no_expiry_text');
     try {
       final dt = DateTime.parse(dateStr);
       return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
@@ -1062,10 +1192,10 @@ class _HomePageState extends State<HomePage> {
     if (_promoCoupons.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: scale.h(40)),
-        child: const Center(
+        child: Center(
           child: Text(
-            'No rewards available.',
-            style: TextStyle(color: Colors.grey),
+            _lang.get('no_rewards_available_home'),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
       );
@@ -1149,7 +1279,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: scale.h(4)),
                         Text(
-                          'Valid until ${_formatDate(coupon.validUntil)}',
+                          '${_lang.get('valid_until_text')} ${_formatDate(coupon.validUntil)}',
                           style: TextStyle(
                             color: const Color(0xFF8A909C),
                             fontSize: scale.sp(11),
@@ -1157,7 +1287,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: scale.h(6)),
                         Text(
-                          '${coupon.points} Pts',
+                          '${coupon.points} ${_lang.get('pts_unit')}',
                           style: TextStyle(
                             color: AppColor.primaryRed,
                             fontWeight: FontWeight.w800,
@@ -1189,7 +1319,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         child: Text(
-                          'Redeem Now',
+                          _lang.get('redeem_now'),
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: scale.sp(13),
@@ -1256,13 +1386,15 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           _buildQuickAction(
                             scale,
-                            'Reward',
+                            _lang.get('rewards'),
+                            icon: Icons.redeem_rounded, // Better gift icon
                             onTap: () => widget.onTabSelected?.call(2),
                           ),
                           SizedBox(width: scale.w(10)),
                           _buildQuickAction(
                             scale,
-                            'Menu',
+                            _lang.get('menu'),
+                            icon: Icons.menu_book_rounded,
                             onTap: () => widget.onTabSelected?.call(1),
                           ),
                         ],

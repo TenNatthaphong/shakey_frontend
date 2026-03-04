@@ -3,6 +3,7 @@ import 'package:shakey/app_color.dart';
 import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/cart_service.dart';
 import 'package:shakey/services/menu_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class MenuDetailPage extends StatefulWidget {
   final Menu menu;
@@ -16,8 +17,9 @@ class MenuDetailPage extends StatefulWidget {
 class _MenuDetailPageState extends State<MenuDetailPage> {
   final MenuService _menuService = MenuService.instance;
   final CartService _cartService = CartService.instance;
+  final _lang = LanguageService.instance;
   int quantity = 1;
-  String selectedSweetness = '100% Sweet';
+  String selectedSweetness = '';
 
   List<MenuSize> _sizes = [];
   MenuSize? _selectedSize;
@@ -29,19 +31,25 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
   bool _isFavorite = false;
   final TextEditingController _noteController = TextEditingController();
 
-  final List<String> sweetnessLevels = [
-    '100% Sweet',
-    '75% Sweet',
-    '50% Sweet',
-    '25% Sweet',
-    '0% Sweet',
+  List<String> get sweetnessLevels => [
+    'sweet_100',
+    'sweet_75',
+    'sweet_50',
+    'sweet_25',
+    'sweet_0',
   ];
 
   @override
   void initState() {
     super.initState();
     _menuService.addListener(_onMenuServiceChanged);
+    _lang.addListener(_onLanguageChanged);
+    selectedSweetness = 'sweet_100';
     _fetchData();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onMenuServiceChanged() {
@@ -55,6 +63,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
   @override
   void dispose() {
     _menuService.removeListener(_onMenuServiceChanged);
+    _lang.removeListener(_onLanguageChanged);
     _noteController.dispose();
     super.dispose();
   }
@@ -100,7 +109,9 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed: ${result['message'] ?? 'Unknown error'}'),
+            content: Text(
+              '${_lang.get('failed')}: ${result['message'] ?? 'Unknown error'}',
+            ),
             backgroundColor: AppColor.primaryRed,
           ),
         );
@@ -152,13 +163,13 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                           ),
                         )
                       else if (_sizes.isNotEmpty) ...[
-                        _buildSectionHeader('Size', 'Pick 1'),
+                        _buildSectionHeader(
+                          _lang.get('size'),
+                          _lang.get('pick_1'),
+                        ),
                         ..._sizes.map(
                           (s) => _buildRadioItem(
-                            'Size ${s.name}' +
-                                (s.price > 0
-                                    ? ' (+ ${_price(s.price.toInt())})'
-                                    : ''),
+                            '${_lang.get('size')} ${s.name}${s.price > 0 ? ' (+ ${_price(s.price.toInt())})' : ''}',
                             s.name,
                             _selectedSize?.name ?? '',
                             (val) {
@@ -174,20 +185,29 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                         ),
                         const Divider(height: 32),
                       ] else ...[
-                        _buildSectionHeader('Size', 'Pick 1'),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
+                        _buildSectionHeader(
+                          _lang.get('size'),
+                          _lang.get('pick_1'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            'ยังไม่มีข้อมูล size',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                            _lang.get('no_size'),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                         const Divider(height: 32),
                       ],
-                      _buildSectionHeader('Sweetness Level', 'Pick 1'),
+                      _buildSectionHeader(
+                        _lang.get('sweetness_level'),
+                        _lang.get('pick_1'),
+                      ),
                       ...sweetnessLevels.map(
                         (s) => _buildRadioItem(
-                          s,
+                          _lang.get(s),
                           s,
                           selectedSweetness,
                           (val) => setState(() => selectedSweetness = val!),
@@ -204,16 +224,25 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                         )
                       else if (_toppings.isNotEmpty) ...[
                         const Divider(height: 32),
-                        _buildSectionHeader('Add Toppings', 'Optional'),
+                        _buildSectionHeader(
+                          _lang.get('add_toppings'),
+                          _lang.get('optional'),
+                        ),
                         ..._toppings.map((t) => _buildCheckboxItem(t)),
                       ] else ...[
                         const Divider(height: 32),
-                        _buildSectionHeader('Add Toppings', 'Optional'),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
+                        _buildSectionHeader(
+                          _lang.get('add_toppings'),
+                          _lang.get('optional'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            'ยังไม่มี Topping ในตอนนี้',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                            _lang.get('no_topping'),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -334,9 +363,9 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
-                const Text(
-                  'Base price',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                Text(
+                  _lang.get('base_price'),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -449,12 +478,12 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Note to restaurant',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              _lang.get('note_to_restaurant'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
-              'Optional',
+              _lang.get('optional'),
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ],
@@ -463,7 +492,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
         TextField(
           controller: _noteController,
           decoration: InputDecoration(
-            hintText: 'Add your request (subject to restaurant\'s discretion)',
+            hintText: _lang.get('note_hint'),
             hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
             filled: true,
             fillColor: Colors.white,
@@ -535,7 +564,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                       menu: widget.menu,
                       variant: _selectedSize,
                       quantity: quantity,
-                      sweetness: selectedSweetness,
+                      sweetness: _lang.get(selectedSweetness),
                       price: currentTotalPrice ~/ quantity,
                       selectedToppings: _selectedToppings.toList(),
                       note: _noteController.text.isNotEmpty
@@ -555,7 +584,7 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
                     elevation: 0,
                   ),
                   child: Text(
-                    'Add to Basket - ${_price(currentTotalPrice)}',
+                    '${_lang.get('add_to_basket')} - ${_price(currentTotalPrice)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),

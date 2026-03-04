@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -13,10 +14,22 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
+    _lang.removeListener(_onLanguageChanged);
     super.dispose();
   }
 
@@ -25,7 +38,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (email.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter your email')));
+      ).showSnackBar(SnackBar(content: Text(_lang.get('please_enter_email'))));
       return;
     }
 
@@ -66,23 +79,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 40),
-            const Text(
-              'Forgot Password',
-              style: TextStyle(
+            Text(
+              _lang.get('forgot_password'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Enter your email address and we will send you an OTP to reset your password.',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+            Text(
+              _lang.get(
+                'enter_email_otp_msg',
+              ), // Retained original line as widget.email is not available here
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
             const SizedBox(height: 40),
-            const Text(
-              'Email',
-              style: TextStyle(color: Colors.white, fontSize: 13),
+            Text(
+              _lang.get('email'),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
             const SizedBox(height: 6),
             TextField(
@@ -93,7 +108,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   Icons.email_outlined,
                   color: Colors.white,
                 ),
-                hintText: 'Email',
+                hintText: _lang.get('email'),
                 hintStyle: const TextStyle(color: Colors.white54),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -126,9 +141,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           color: AppColor.primaryRed,
                         ),
                       )
-                    : const Text(
-                        'SEND OTP',
-                        style: TextStyle(
+                    : Text(
+                        _lang.get('send_otp'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),

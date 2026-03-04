@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class PinPage extends StatefulWidget {
   final bool isSetting;
@@ -19,14 +20,20 @@ class _PinPageState extends State<PinPage> {
   bool _isVerifyingOldPin = false;
   bool _isConfirming = false;
   String _errorMessage = '';
+  final _lang = LanguageService.instance;
 
   @override
   void initState() {
     super.initState();
+    _lang.addListener(_onLanguageChanged);
     // If we are setting a new PIN and one already exists, we must verify the old one first.
     if (widget.isSetting && AuthService.instance.hasPin) {
       _isVerifyingOldPin = true;
     }
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onNumberPressed(int number) {
@@ -81,7 +88,7 @@ class _PinPageState extends State<PinPage> {
       } else {
         setState(() {
           _oldPin = '';
-          _errorMessage = 'Incorrect old PIN. Please try again.';
+          _errorMessage = _lang.get('incorrect_old_pin');
         });
       }
     } else if (widget.isSetting) {
@@ -97,7 +104,7 @@ class _PinPageState extends State<PinPage> {
       } else {
         setState(() {
           _confirmPin = '';
-          _errorMessage = 'PINs do not match. Try again.';
+          _errorMessage = _lang.get('pins_not_match');
         });
       }
     } else {
@@ -110,7 +117,7 @@ class _PinPageState extends State<PinPage> {
       } else {
         setState(() {
           _pin = '';
-          _errorMessage = 'Incorrect PIN. Please try again.';
+          _errorMessage = _lang.get('incorrect_pin');
         });
       }
     }
@@ -122,14 +129,14 @@ class _PinPageState extends State<PinPage> {
         ? _oldPin
         : (_isConfirming ? _confirmPin : _pin);
 
-    String title = 'Enter your PIN';
+    String title = _lang.get('enter_your_pin');
     if (widget.isSetting) {
       if (_isVerifyingOldPin) {
-        title = 'Enter your old PIN';
+        title = _lang.get('enter_old_pin');
       } else if (_isConfirming) {
-        title = 'Confirm your new PIN';
+        title = _lang.get('confirm_new_pin');
       } else {
-        title = 'Set your new 6-digit PIN';
+        title = _lang.get('set_new_pin');
       }
     }
 
@@ -192,7 +199,7 @@ class _PinPageState extends State<PinPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const SizedBox(width: 80),
+            const SizedBox(width: 100),
             _buildKey(0),
             _buildDeleteKey(),
           ],

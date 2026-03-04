@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
 import 'package:shakey/services/auth_service.dart';
+import 'package:shakey/services/language_service.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String resetToken;
@@ -16,11 +17,23 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  final _lang = LanguageService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _lang.removeListener(_onLanguageChanged);
     super.dispose();
   }
 
@@ -30,7 +43,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
     if (password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a new password')),
+        SnackBar(content: Text(_lang.get('please_enter_new_password'))),
       );
       return;
     }
@@ -38,7 +51,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     if (password != confirm) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      ).showSnackBar(SnackBar(content: Text(_lang.get('passwords_not_match'))));
       return;
     }
 
@@ -47,8 +60,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       await AuthService.instance.resetPassword(widget.resetToken, password);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset successful. Please login.'),
+          SnackBar(
+            content: Text(_lang.get('password_reset_success')),
             backgroundColor: Colors.green,
           ),
         );
@@ -85,31 +98,31 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 40),
-            const Text(
-              'Reset Password',
-              style: TextStyle(
+            Text(
+              _lang.get('reset_password'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Please enter your new password.',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+            Text(
+              _lang.get('enter_new_password_msg'),
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
             const SizedBox(height: 40),
             _buildTextField(
               controller: _passwordController,
-              hint: 'New Password',
-              label: 'New Password',
+              hint: _lang.get('new_password'),
+              label: _lang.get('new_password'),
               isPassword: true,
             ),
             const SizedBox(height: 20),
             _buildTextField(
               controller: _confirmPasswordController,
-              hint: 'Confirm New Password',
-              label: 'Confirm Password',
+              hint: _lang.get('confirm_password'),
+              label: _lang.get('confirm_password'),
               isPassword: true,
             ),
             const SizedBox(height: 40),
@@ -133,9 +146,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           color: AppColor.primaryRed,
                         ),
                       )
-                    : const Text(
-                        'RESET PASSWORD',
-                        style: TextStyle(
+                    : Text(
+                        _lang.get('reset_password_btn'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
