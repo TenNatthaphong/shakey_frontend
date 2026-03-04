@@ -151,27 +151,104 @@ class _RewardPageState extends State<RewardPage>
   void _showPrivilegeDialog() {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          '${_getLocalizedMemberName(_user?.member)} ${_lang.get('privilege')}',
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_lang.get('privilege_discount')),
-            Text(_lang.get('privilege_birthday')),
-            Text(_lang.get('privilege_double_points')),
-            Text(_lang.get('privilege_early_access')),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(_lang.get('close')),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: _getMemberGradient(),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '${_getLocalizedMemberName(_user?.member)} ${_lang.get('privilege')}',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              _buildPrivilegeRow(
+                Icons.local_offer_rounded,
+                _lang.get('privilege_discount'),
+              ),
+              const SizedBox(height: 16),
+              _buildPrivilegeRow(
+                Icons.cake_rounded,
+                _lang.get('privilege_birthday'),
+              ),
+              const SizedBox(height: 16),
+              _buildPrivilegeRow(
+                Icons.auto_awesome_rounded,
+                _lang.get('privilege_double_points'),
+              ),
+              const SizedBox(height: 16),
+              _buildPrivilegeRow(
+                Icons.fiber_new_rounded,
+                _lang.get('privilege_early_access'),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primaryRed,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    _lang.get('close'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildPrivilegeRow(IconData icon, String text) {
+    final cleanText = text.startsWith('• ') ? text.substring(2) : text;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColor.primaryRed, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            cleanText,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -80,37 +80,70 @@ class _CartPageState extends State<CartPage> {
 
   Widget _buildEmptyCart(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.shopping_basket_outlined,
-            size: 80,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _lang.get('cart_empty'),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black54,
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(seconds: 2),
+        tween: Tween(begin: 0.0, end: 1.0),
+        curve: Curves.easeInOut,
+        builder: (context, value, child) {
+          return Transform.translate(
+            offset: Offset(0, 15 * (1 - (value * 2 - 1).abs())),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryRed.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.shopping_basket_rounded,
+                    size: 80,
+                    color: AppColor.primaryRed.withValues(alpha: 0.8),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _lang.get('cart_empty'),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _lang.get('go_explore'),
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade500),
+                ),
+                const SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primaryRed,
+                    foregroundColor: Colors.white,
+                    elevation: 10,
+                    shadowColor: AppColor.primaryRed.withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 16,
+                    ),
+                  ),
+                  child: Text(
+                    _lang.get('go_explore'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColor.primaryRed,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            ),
-            child: Text(_lang.get('go_explore')),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
