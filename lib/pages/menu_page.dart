@@ -595,15 +595,69 @@ class _MenuPageState extends State<MenuPage> {
                             // For You Dropdown
                             Expanded(
                               child: PopupMenuButton<String>(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                color: Colors.white,
+                                surfaceTintColor: Colors.white,
+                                elevation: 8,
+                                position: PopupMenuPosition.under,
+                                offset: const Offset(0, 8),
+                                constraints: const BoxConstraints(
+                                  minWidth: 200,
+                                ),
                                 onSelected: (String cat) {
                                   setState(() => selectedCategory = cat);
                                 },
                                 itemBuilder: (BuildContext context) {
                                   return _categoryKeys.map((String cat) {
+                                    final bool isSelected =
+                                        cat == selectedCategory;
                                     return PopupMenuItem<String>(
                                       value: cat,
-                                      child: Text(
-                                        _lang.get(_getCategoryLangKey(cat)),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                          horizontal: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? AppColor.primaryRed.withValues(
+                                                  alpha: 0.1,
+                                                )
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                _lang.get(
+                                                  _getCategoryLangKey(cat),
+                                                ),
+                                                style: TextStyle(
+                                                  color: isSelected
+                                                      ? AppColor.primaryRed
+                                                      : Colors.black87,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            if (isSelected)
+                                              const Icon(
+                                                Icons.check_circle_rounded,
+                                                color: AppColor.primaryRed,
+                                                size: 18,
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     );
                                   }).toList();
@@ -629,9 +683,19 @@ class _MenuPageState extends State<MenuPage> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      const Icon(
-                                        Icons.keyboard_arrow_down,
-                                        color: AppColor.primaryRed,
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: AppColor.primaryRed.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.keyboard_arrow_down,
+                                          color: AppColor.primaryRed,
+                                          size: 16,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -762,80 +826,182 @@ class _MenuPageState extends State<MenuPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          existing == null
-              ? _lang.get('add_address_title')
-              : _lang.get('edit_address_title'),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: _lang.get('address_name')),
-            ),
-            TextField(
-              controller: detailController,
-              decoration: InputDecoration(
-                labelText: _lang.get('detail_address'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                existing == null
+                    ? _lang.get('add_address_title')
+                    : _lang.get('edit_address_title'),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          if (existing != null)
-            TextButton(
-              onPressed: () async {
-                final success = await _userService.deleteAddress(existing.id);
-                if (success) {
-                  await _refreshAddresses();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    Navigator.pop(context); // Also close sheet
-                  }
-                }
-              },
-              child: Text(
-                _lang.get('delete'),
-                style: const TextStyle(color: Colors.red),
+              const SizedBox(height: 24),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: _lang.get('address_name'),
+                  labelStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColor.primaryRed,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(_lang.get('cancel')),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isEmpty || detailController.text.isEmpty)
-                return;
-
-              bool success;
-              if (existing == null) {
-                success = await _userService.addAddress(
-                  nameController.text,
-                  detailController.text,
-                );
-              } else {
-                success = await _userService.updateAddress(
-                  existing.id,
-                  nameController.text,
-                  detailController.text,
-                );
-              }
-
-              if (success) {
-                await _refreshAddresses();
-                if (context.mounted) {
-                  Navigator.pop(context);
+              const SizedBox(height: 16),
+              TextField(
+                controller: detailController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: _lang.get('detail_address'),
+                  alignLabelWithHint: true,
+                  labelStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColor.primaryRed,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: existing != null
+                    ? MainAxisAlignment.spaceBetween
+                    : MainAxisAlignment.end,
+                children: [
                   if (existing != null)
-                    Navigator.pop(context); // Close sheet if editing
-                }
-              }
-            },
-            child: const Text('Save'),
+                    TextButton(
+                      onPressed: () async {
+                        final success = await _userService.deleteAddress(
+                          existing.id,
+                        );
+                        if (success) {
+                          await _refreshAddresses();
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            Navigator.pop(context); // Also close sheet
+                          }
+                        }
+                      },
+                      child: Text(
+                        _lang.get('delete'),
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          _lang.get('cancel'),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (nameController.text.isEmpty ||
+                              detailController.text.isEmpty)
+                            return;
+
+                          bool success;
+                          if (existing == null) {
+                            success = await _userService.addAddress(
+                              nameController.text,
+                              detailController.text,
+                            );
+                          } else {
+                            success = await _userService.updateAddress(
+                              existing.id,
+                              nameController.text,
+                              detailController.text,
+                            );
+                          }
+
+                          if (success) {
+                            await _refreshAddresses();
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              if (existing != null) {
+                                Navigator.pop(
+                                  context,
+                                ); // Close sheet if editing
+                              }
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColor.primaryRed,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: Text(
+                          _lang.get('save'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

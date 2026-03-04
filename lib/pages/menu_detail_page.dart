@@ -558,24 +558,29 @@ class _MenuDetailPageState extends State<MenuDetailPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    final detail = OrderDetail(
-                      id: DateTime.now().microsecondsSinceEpoch.toString(),
-                      menu: widget.menu,
-                      variant: _selectedSize,
-                      quantity: quantity,
-                      sweetness: _lang.get(selectedSweetness),
-                      price: currentTotalPrice ~/ quantity,
-                      selectedToppings: _selectedToppings.toList(),
-                      note: _noteController.text.isNotEmpty
-                          ? _noteController.text
-                          : null,
-                    );
-                    _cartService.addOrderDetail(detail);
-                    Navigator.pop(context, true);
-                  },
+                  onPressed: (_isLoadingSizes || _isLoadingToppings)
+                      ? null
+                      : () {
+                          final detail = OrderDetail(
+                            id: DateTime.now().microsecondsSinceEpoch
+                                .toString(),
+                            menu: widget.menu,
+                            variant: _selectedSize,
+                            quantity: quantity,
+                            sweetness: _lang.get(selectedSweetness),
+                            price: currentTotalPrice ~/ quantity,
+                            selectedToppings: _selectedToppings.toList(),
+                            note: _noteController.text.isNotEmpty
+                                ? _noteController.text
+                                : null,
+                          );
+                          _cartService.addOrderDetail(detail);
+                          Navigator.pop(context, true);
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.primaryRed,
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    disabledForegroundColor: Colors.grey.shade600,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),

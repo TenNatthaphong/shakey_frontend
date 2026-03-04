@@ -51,6 +51,19 @@ class LanguageService extends ChangeNotifier {
       'English': 'Add New Address',
       'ภาษาไทย': 'เพิ่มที่อยู่ใหม่',
     },
+    'add_address_title': {'English': 'Add Address', 'ภาษาไทย': 'เพิ่มที่อยู่'},
+    'edit_address_title': {
+      'English': 'Edit Address',
+      'ภาษาไทย': 'แก้ไขที่อยู่',
+    },
+    'address_name': {
+      'English': 'Address Name (e.g., Home, Work)',
+      'ภาษาไทย': 'ชื่อที่อยู่ (เช่น บ้าน, ที่ทำงาน)',
+    },
+    'detail_address': {
+      'English': 'Detailed Address',
+      'ภาษาไทย': 'รายละเอียดที่อยู่',
+    },
     'select_address': {'English': 'Select Address', 'ภาษาไทย': 'เลือกที่อยู่'},
     'select_branch': {'English': 'Select Branch', 'ภาษาไทย': 'เลือกสาขา'},
     'search_hint': {
@@ -453,6 +466,10 @@ class LanguageService extends ChangeNotifier {
     'cancel': {'English': 'Cancel', 'ภาษาไทย': 'ยกเลิก'},
     'confirm': {'English': 'Confirm', 'ภาษาไทย': 'ยืนยัน'},
     'save': {'English': 'Save', 'ภาษาไทย': 'บันทึก'},
+    'save_changes': {
+      'English': 'Save Changes',
+      'ภาษาไทย': 'บันทึกการเปลี่ยนแปลง',
+    },
     'delete': {'English': 'Delete', 'ภาษาไทย': 'ลบ'},
     'edit': {'English': 'Edit', 'ภาษาไทย': 'แก้ไข'},
     'success': {'English': 'Success', 'ภาษาไทย': 'สำเร็จ'},
