@@ -41,7 +41,7 @@ class UserReward {
   final String status; // ACTIVE, USED, EXPIRED
   final DateTime? createdAt;
   final DateTime? usedAt;
-  final MenuReward? reward;
+  final Reward? reward;
 
   const UserReward({
     required this.id,
@@ -54,31 +54,25 @@ class UserReward {
   });
 
   factory UserReward.fromJson(Map<String, dynamic> json) {
-    try {
-      return UserReward(
-        id: json['id']?.toString() ?? '',
-        userId: json['user_id']?.toString() ?? '',
-        rewardId: json['reward_id']?.toString() ?? '',
-        status: json['reward_status']?.toString() ?? 'ACTIVE',
-        createdAt: json['created_at'] != null
-            ? DateTime.tryParse(json['created_at'].toString())
-            : null,
-        usedAt: json['used_at'] != null
-            ? DateTime.tryParse(json['used_at'].toString())
-            : null,
-        reward: json['reward'] != null
-            ? MenuReward.fromJson(json['reward'] as Map<String, dynamic>)
-            : null,
-      );
-    } catch (e) {
-      print('Error parsing UserReward: $e');
-      print('JSON data: $json');
-      rethrow;
-    }
+    return UserReward(
+      id: json['id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      rewardId: json['reward_id']?.toString() ?? '',
+      status: json['reward_status']?.toString() ?? 'ACTIVE',
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      usedAt: json['used_at'] != null
+          ? DateTime.tryParse(json['used_at'].toString())
+          : null,
+      reward: json['reward'] != null
+          ? Reward.fromJson(json['reward'] as Map<String, dynamic>)
+          : null,
+    );
   }
 }
 
-class MenuReward {
+class Reward {
   final String id;
   final String name;
   final String? image;
@@ -86,7 +80,7 @@ class MenuReward {
   final String? description;
   final String? expDate;
 
-  const MenuReward({
+  const Reward({
     required this.id,
     required this.name,
     this.image,
@@ -95,8 +89,8 @@ class MenuReward {
     this.expDate,
   });
 
-  factory MenuReward.fromJson(Map<String, dynamic> json) {
-    return MenuReward(
+  factory Reward.fromJson(Map<String, dynamic> json) {
+    return Reward(
       id: (json['reward_id'] ?? json['id'])?.toString() ?? '',
       name: json['name']?.toString() ?? 'Untitled',
       image: json['image']?.toString(),
@@ -198,114 +192,6 @@ class Menu {
           ['Milk Tea'],
     );
   }
-
-  static List<Menu> get allMenus => const [
-    Menu(
-      id: '11',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 5.0,
-      imagePath: 'assets/images/Chocolate.png',
-      price: 0.0,
-      oldPrice: 0.0,
-      categories: ['Today\'s Offer', 'Popular'],
-    ),
-    Menu(
-      id: '1',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.8,
-      imagePath: 'assets/images/Chocolate.png',
-      price: 0.0,
-      badge: 'Most ordered',
-      categories: ['Popular', 'Fruit Tea', 'For You'],
-    ),
-    Menu(
-      id: '2',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.9,
-      imagePath: 'assets/images/Cookies_n_cream.png',
-      price: 0.0,
-      badge: 'Most ordered',
-      categories: ['Popular', 'For You'],
-    ),
-    Menu(
-      id: '3',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.7,
-      imagePath: 'assets/images/Matcha.png',
-      price: 0.0,
-      badge: 'Most liked',
-      categories: ['Vegetarian', 'Milk Tea', 'For You'],
-    ),
-    Menu(
-      id: '4',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.6,
-      imagePath: 'assets/images/Strawberry.png',
-      price: 0.0,
-      badge: 'Most ordered',
-      categories: ['For You', 'Milk Tea'],
-    ),
-    Menu(
-      id: '5',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.5,
-      imagePath: 'assets/images/Vanilla.png',
-      price: 0.0,
-      categories: ['Fruit Tea', 'Popular'],
-    ),
-    Menu(
-      id: '6',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.9,
-      imagePath: 'assets/images/Chocolate.png',
-      price: 0.0,
-      categories: ['Fruit Tea'],
-    ),
-    Menu(
-      id: '7',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.8,
-      imagePath: 'assets/images/Chocolate.png',
-      price: 0.0,
-      categories: ['Fruit Tea'],
-    ),
-    Menu(
-      id: '8',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.7,
-      imagePath: 'assets/images/Strawberry.png',
-      price: 0.0,
-      badge: 'Most ordered',
-      categories: ['Fruit Tea', 'Popular'],
-    ),
-    Menu(
-      id: '9',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.6,
-      imagePath: 'assets/images/Strawberry.png',
-      price: 0.0,
-      categories: ['Fruit Tea'],
-    ),
-    Menu(
-      id: '10',
-      name: '[name]',
-      description: 'Placeholder description',
-      rating: 4.5,
-      imagePath: 'assets/images/Chocolate.png',
-      price: 0.0,
-      categories: ['Fruit Tea'],
-    ),
-  ];
 }
 
 class OrderDetail {
@@ -338,14 +224,15 @@ class OrderDetail {
   Map<String, dynamic> toJson() {
     // Map '100% Sweet' to 'Sweet_100' for Prisma enum
     String mappedSweetness = 'Sweet_100';
-    if (sweetness.contains('0%'))
+    if (sweetness.contains('0%')) {
       mappedSweetness = 'Sweet_0';
-    else if (sweetness.contains('25%'))
+    } else if (sweetness.contains('25%')) {
       mappedSweetness = 'Sweet_25';
-    else if (sweetness.contains('50%'))
+    } else if (sweetness.contains('50%')) {
       mappedSweetness = 'Sweet_50';
-    else if (sweetness.contains('75%'))
+    } else if (sweetness.contains('75%')) {
       mappedSweetness = 'Sweet_75';
+    }
 
     return {
       'variant_id': variant?.variantId,

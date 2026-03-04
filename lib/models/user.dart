@@ -65,9 +65,9 @@ class Address {
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      id: json['address_id'] ?? '',
-      name: json['name'] ?? '',
-      detail: json['detail'] ?? '',
+      id: json['address_id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      detail: json['detail'] as String? ?? '',
     );
   }
 }
@@ -79,6 +79,9 @@ class Branch {
   const Branch({required this.id, required this.detail});
 
   factory Branch.fromJson(Map<String, dynamic> json) {
-    return Branch(id: json['branch_id'] ?? '', detail: json['detail'] ?? '');
+    return Branch(
+      id: json['branch_id'] as String? ?? '',
+      detail: json['detail'] as String? ?? '',
+    );
   }
 }

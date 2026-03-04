@@ -22,7 +22,7 @@ class _RewardPageState extends State<RewardPage>
   final _lang = LanguageService.instance;
   late TabController _tabController;
 
-  List<MenuReward> _availableRewards = [];
+  List<Reward> _availableRewards = [];
   List<UserReward> _myRewards = [];
   bool _isLoading = true;
   User? _user;
@@ -320,7 +320,7 @@ class _RewardPageState extends State<RewardPage>
     }
   }
 
-  Future<void> _handleRedeem(MenuReward reward) async {
+  Future<void> _handleRedeem(Reward reward) async {
     final auth = AuthService.instance;
     final userService = UserService.instance;
     final user = userService.user;
@@ -360,7 +360,7 @@ class _RewardPageState extends State<RewardPage>
     }
   }
 
-  Widget _buildRewardCard(MenuReward reward) {
+  Widget _buildRewardCard(Reward reward) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(

@@ -29,7 +29,7 @@ class MenuService extends ChangeNotifier {
       // TODO(backend): Implement real menu API
       debugPrint('Error fetching menus: $e');
     }
-    return Menu.allMenus; // Fallback to mock
+    return []; // Return empty list on failure
   }
 
   Future<List<Topping>> getToppings() async {
