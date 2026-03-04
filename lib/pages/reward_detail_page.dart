@@ -7,7 +7,7 @@ import 'package:shakey/services/language_service.dart';
 
 class CouponDetailPage extends StatefulWidget {
   final UserReward? userReward;
-  final MenuReward? previewReward;
+  final Reward? previewReward;
   final VoidCallback? onUsed;
 
   const CouponDetailPage({

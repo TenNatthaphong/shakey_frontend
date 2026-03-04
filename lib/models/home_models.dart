@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 class HomeScale {
-  HomeScale(this.context)
-    : _ratio = (MediaQuery.sizeOf(context).width / _designWidth).clamp(
-        _minScale,
-        _maxScale,
-      );
-
   final BuildContext context;
   final double _ratio;
 
   static const double _designWidth = 390;
   static const double _maxScale = 1.25;
   static const double _minScale = 0.9;
+
+  HomeScale(this.context)
+    : _ratio = (MediaQuery.sizeOf(context).width / _designWidth).clamp(
+        _minScale,
+        _maxScale,
+      );
 
   double w(double value) => value * _ratio;
   double h(double value) => value * _ratio;
@@ -21,16 +21,12 @@ class HomeScale {
 }
 
 class PromoCoupon {
-  factory PromoCoupon.fromJson(Map<String, dynamic> json) {
-    return PromoCoupon(
-      rewardId: json['reward_id'] as String? ?? '',
-      imageAsset: json['image'] as String? ?? '',
-      title: json['name'] as String? ?? 'Untitled',
-      validUntil: json['exp_date'] as String? ?? '',
-      points: json['require_point'] as int? ?? 0,
-      condition: json['description'] as String? ?? '',
-    );
-  }
+  final String rewardId;
+  final String imageAsset;
+  final String title;
+  final String validUntil;
+  final int points;
+  final String condition;
 
   const PromoCoupon({
     required this.rewardId,
@@ -41,12 +37,16 @@ class PromoCoupon {
     required this.condition,
   });
 
-  final String rewardId;
-  final String imageAsset;
-  final String title;
-  final String validUntil;
-  final int points;
-  final String condition;
+  factory PromoCoupon.fromJson(Map<String, dynamic> json) {
+    return PromoCoupon(
+      rewardId: json['reward_id'] as String? ?? '',
+      imageAsset: json['image'] as String? ?? '',
+      title: json['name'] as String? ?? 'Untitled',
+      validUntil: json['exp_date'] as String? ?? '',
+      points: json['require_point'] as int? ?? 0,
+      condition: json['description'] as String? ?? '',
+    );
+  }
 }
 
 class TopBgClipper extends CustomClipper<Path> {

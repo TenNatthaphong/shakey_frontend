@@ -2,13 +2,13 @@ import 'package:shakey/models/menu.dart';
 import 'package:shakey/services/auth_service.dart';
 
 class RewardService {
-  Future<List<MenuReward>> getRewardList() async {
+  Future<List<Reward>> getRewardList() async {
     try {
       final response = await AuthService.instance.dio.get('/reward');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        return data.map((json) => MenuReward.fromJson(json)).toList();
+        return data.map((json) => Reward.fromJson(json)).toList();
       }
     } catch (e) {
       print('Error fetching reward list: $e');

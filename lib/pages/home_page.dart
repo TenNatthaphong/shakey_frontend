@@ -385,7 +385,7 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CouponDetailPage(
-          previewReward: MenuReward(
+          previewReward: Reward(
             id: coupon.rewardId,
             name: coupon.title,
             image: coupon.imageAsset,
