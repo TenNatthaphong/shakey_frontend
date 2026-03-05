@@ -18,7 +18,7 @@ class RewardService {
 
   Future<List<UserReward>> getUserRewards() async {
     try {
-      final response = await AuthService.instance.dio.get('/reward/my_rewards');
+      final response = await AuthService.instance.dio.get('/user/reward');
 
       print('Fetching My Rewards: ${response.statusCode}');
 

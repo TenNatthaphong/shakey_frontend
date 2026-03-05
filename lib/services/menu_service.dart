@@ -126,31 +126,25 @@ class MenuService extends ChangeNotifier {
     bool isCurrentlyFavorite,
   ) async {
     try {
-      final endpoint = isCurrentlyFavorite ? 'remove' : 'add';
-      debugPrint(
-        'MenuService: toggling favorite for $menuId. endpoint=$endpoint',
-      );
-
-      final response = await AuthService.instance.dio.post(
-        '/user/favorite/$endpoint',
-        data: {'menu_id': menuId},
-      );
-
-      debugPrint('MenuService: toggle status=${response.statusCode}');
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (isCurrentlyFavorite) {
-          _favoriteIds.remove(menuId);
-        } else {
-          _favoriteIds.add(menuId);
-        }
-        notifyListeners();
-        return {'success': true};
+      if (isCurrentlyFavorite) {
+        await AuthService.instance.dio.delete(
+          '/user/favorite/remove',
+          data: {'menu_id': menuId},
+        );
       } else {
-        return {
-          'success': false,
-          'message': 'Server error: ${response.statusCode}',
-        };
+        await AuthService.instance.dio.post(
+          '/user/favorite/add',
+          data: {'menu_id': menuId},
+        );
       }
+
+      if (isCurrentlyFavorite) {
+        _favoriteIds.remove(menuId);
+      } else {
+        _favoriteIds.add(menuId);
+      }
+      notifyListeners();
+      return {'success': true};
     } on DioException catch (e) {
       debugPrint('MenuService: Error toggling favorite: $e');
       String message = e.message ?? 'Unknown error';
