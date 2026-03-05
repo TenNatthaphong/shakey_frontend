@@ -231,9 +231,7 @@ class _CouponDetailPageState extends State<CouponDetailPage> {
                     child: ElevatedButton(
                       onPressed: _isProcessing ? null : _handleAction,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isPreview
-                            ? const Color(0xFFAA8515)
-                            : AppColor.primaryRed,
+                        backgroundColor: AppColor.primaryRed,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
