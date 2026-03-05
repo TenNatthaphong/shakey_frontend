@@ -143,45 +143,61 @@ class _PinPageState extends State<PinPage> {
     return Scaffold(
       backgroundColor: AppColor.primaryRed,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            const Spacer(),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(6, (index) {
-                bool isFilled = index < currentCode.length;
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isFilled ? Colors.white : Colors.white24,
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                );
-              }),
-            ),
-            if (_errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.yellow, fontSize: 14),
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 10,
+                left: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
-            const Spacer(),
-            _buildKeypad(),
-            const SizedBox(height: 50),
+            Column(
+              children: [
+                const Spacer(),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(6, (index) {
+                    bool isFilled = index < currentCode.length;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isFilled ? Colors.white : Colors.white24,
+                        border: Border.all(color: Colors.white, width: 1),
+                      ),
+                    );
+                  }),
+                ),
+                if (_errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Text(
+                      _errorMessage,
+                      style: const TextStyle(
+                        color: Colors.yellow,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                _buildKeypad(),
+                const SizedBox(height: 50),
+              ],
+            ),
           ],
         ),
       ),

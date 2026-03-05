@@ -36,6 +36,7 @@ class LanguageService extends ChangeNotifier {
     'settings': {'English': 'Settings', 'ภาษาไทย': 'การตั้งค่า'},
     'notifications': {'English': 'Notifications', 'ภาษาไทย': 'การแจ้งเตือน'},
     'language': {'English': 'Language', 'ภาษาไทย': 'ภาษา'},
+    'select_language': {'English': 'Select Language', 'ภาษาไทย': 'เลือกภาษา'},
     'about': {'English': 'About', 'ภาษาไทย': 'เกี่ยวกับ'},
     'help': {'English': 'Help', 'ภาษาไทย': 'ช่วยเหลือ'},
     'faq': {'English': 'FAQ', 'ภาษาไทย': 'คำถามที่พบบ่อย'},
@@ -223,6 +224,7 @@ class LanguageService extends ChangeNotifier {
       'ภาษาไทย': 'ไม่ได้รับรหัสใช่หรือไม่? ',
     },
     'resend_otp': {'English': 'Resend OTP', 'ภาษาไทย': 'ส่งรหัสใหม่'},
+    'send_otp': {'English': 'Send OTP', 'ภาษาไทย': 'ส่งรหัส OTP'},
     'verify': {'English': 'Verify', 'ภาษาไทย': 'ยืนยัน'},
     'otp_sent_success': {
       'English': 'OTP sent successfully!',
@@ -266,6 +268,60 @@ class LanguageService extends ChangeNotifier {
     'profile_update_failed': {
       'English': 'Failed to update profile',
       'ภาษาไทย': 'อัปเดตโปรไฟล์ไม่สำเร็จ',
+    },
+    'redeemed_success': {
+      'English': 'Redeemed successfully!',
+      'ภาษาไทย': 'แลกรางวัลสำเร็จ!',
+    },
+    'redeem_success_title': {
+      'English': 'Redeem Success',
+      'ภาษาไทย': 'แลกรางวัลสำเร็จ',
+    },
+    'redeem_success_msg': {
+      'English': 'Your reward has been added to My Rewards.',
+      'ภาษาไทย': 'รางวัลของคุณถูกเพิ่มไปยัง "ของรางวัลของฉัน" เรียบร้อยแล้ว',
+    },
+    'reward_used_title': {
+      'English': 'Reward Used',
+      'ภาษาไทย': 'ใช้รางวัลสำเร็จ',
+    },
+    'reward_used_msg': {
+      'English': 'Your reward has been successfully applied.',
+      'ภาษาไทย': 'รางวัลของคุณถูกใช้งานเรียบร้อยแล้ว',
+    },
+    'not_enough_points_msg': {
+      'English': 'Not enough points. You need',
+      'ภาษาไทย': 'คะแนนไม่พอ คุณต้องมี',
+    },
+    'reward_detail': {
+      'English': 'Reward Detail',
+      'ภาษาไทย': 'รายละเอียดรางวัล',
+    },
+    'no_owned_rewards': {
+      'English': 'No rewards owned yet',
+      'ภาษาไทย': 'คุณยังไม่มีของรางวัล',
+    },
+    'voucher_detail': {
+      'English': 'Voucher Detail',
+      'ภาษาไทย': 'รายละเอียดเวาเชอร์',
+    },
+    'points_required': {
+      'English': ' Points required',
+      'ภาษาไทย': ' คะแนนที่ต้องใช้',
+    },
+    'conditions': {'English': 'Conditions', 'ภาษาไทย': 'เงื่อนไข'},
+    'no_conditions': {'English': 'No conditions', 'ภาษาไทย': 'ไม่มีเงื่อนไข'},
+    'use_reward_now': {
+      'English': 'Use Reward Now',
+      'ภาษาไทย': 'ใช้รางวัลทันที',
+    },
+    'points_deducted_msg': {
+      'English': 'Points will be deducted upon redemption',
+      'ภาษาไทย': 'คะแนนจะถูกหักเมื่อกดแลกรางวัล',
+    },
+    'show_to_staff_msg': {
+      'English': 'Please show this screen to the restaurant staff',
+      'ภาษาไทย': 'กรุณาแสดงหน้านี้ให้พนักงานที่ร้านดู',
     },
     'scanned_qr_msg': {'English': 'Scanned QR: ', 'ภาษาไทย': 'สแกน QR: '},
     'enter_username': {

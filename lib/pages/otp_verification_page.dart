@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shakey/app_color.dart';
 import 'package:shakey/router.dart';
@@ -19,12 +20,36 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   bool _isLoading = false;
+  int _timerSeconds = 60;
+  bool _canResend = false;
+  Timer? _timer;
   final _lang = LanguageService.instance;
 
   @override
   void initState() {
     super.initState();
     _lang.addListener(_onLanguageChanged);
+    _startTimer();
+  }
+
+  void _startTimer() {
+    setState(() {
+      _timerSeconds = 60;
+      _canResend = false;
+    });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timerSeconds == 0) {
+        setState(() {
+          _canResend = true;
+          timer.cancel();
+        });
+      } else {
+        setState(() {
+          _timerSeconds--;
+        });
+      }
+    });
   }
 
   void _onLanguageChanged() {
@@ -33,6 +58,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     for (var controller in _controllers) {
       controller.dispose();
     }
@@ -41,6 +67,32 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
     _lang.removeListener(_onLanguageChanged);
     super.dispose();
+  }
+
+  Future<void> _resendOtp() async {
+    if (!_canResend) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await AuthService.instance.forgotPassword(widget.email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_lang.get('otp_sent_success')),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _startTimer();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _onVerify() async {
@@ -176,6 +228,29 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                         ),
                       ),
               ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _lang.get('didnt_receive_otp'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                TextButton(
+                  onPressed: _canResend ? _resendOtp : null,
+                  child: Text(
+                    _canResend
+                        ? _lang.get('resend_otp')
+                        : '${_lang.get('resend_otp')} ($_timerSeconds)',
+                    style: TextStyle(
+                      color: _canResend ? Colors.white : Colors.white38,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

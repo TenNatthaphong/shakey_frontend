@@ -147,7 +147,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         ),
                       )
                     : Text(
-                        _lang.get('reset_password_btn'),
+                        _lang.get('reset_password'),
                         style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,

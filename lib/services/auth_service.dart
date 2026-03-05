@@ -112,8 +112,9 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> _handleDesktopGoogleLogin() async {
+    HttpServer? server;
     try {
-      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final redirectUri = 'http://localhost:${server.port}';
 
       final authUrl = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', {
@@ -130,7 +131,12 @@ class AuthService {
         throw Exception('Could not launch browser');
       }
 
-      final request = await server.first;
+      final request = await server.first.timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          throw Exception('Login timed out. Please try again.');
+        },
+      );
       final code = request.uri.queryParameters['code'];
 
       request.response
@@ -147,7 +153,6 @@ class AuthService {
           </html>
         ''');
       await request.response.close();
-      await server.close();
 
       if (code == null) {
         throw Exception('Authorization code not found from Google.');
@@ -155,7 +160,10 @@ class AuthService {
 
       return await _loginWithBackendGoogleDesktop(code, redirectUri);
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Google Login Error: $e');
+    } finally {
+      await server?.close();
     }
   }
 

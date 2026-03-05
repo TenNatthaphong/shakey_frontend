@@ -136,6 +136,93 @@ class _RewardPageState extends State<RewardPage>
     }
   }
 
+  void _showSuccessDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF4CAF50),
+                  size: 50,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2F2F34),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF8A909C),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primaryRed,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    _lang.get('ok'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _getLocalizedMemberName(MemberLevel? level) {
     if (level == null) return _lang.get('bronze_member');
     switch (level) {
@@ -370,7 +457,7 @@ class _RewardPageState extends State<RewardPage>
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,
@@ -424,11 +511,9 @@ class _RewardPageState extends State<RewardPage>
       // Sync points in global state
       await userService.getProfile();
       _fetchData();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_lang.get('redeemed_success')),
-          backgroundColor: Colors.green,
-        ),
+      _showSuccessDialog(
+        _lang.get('redeem_success_title'),
+        _lang.get('redeem_success_msg'),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(
@@ -572,17 +657,15 @@ class _RewardPageState extends State<RewardPage>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
       itemCount: _myRewards.length,
       itemBuilder: (context, index) => _buildMyRewardCard(_myRewards[index]),
     );
   }
 
   Widget _buildMyRewardCard(UserReward userReward) {
-    print('Building card for reward: ${userReward.id}');
     final reward = userReward.reward;
     if (reward == null) {
-      print('Reward object is NULL for UserReward: ${userReward.id}');
       return const SizedBox();
     }
 
@@ -637,7 +720,7 @@ class _RewardPageState extends State<RewardPage>
           ElevatedButton(
             onPressed: () => _useCoupon(userReward),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFAA8515),
+              backgroundColor: AppColor.primaryRed,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
