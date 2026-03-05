@@ -1401,7 +1401,7 @@ class _MenuPageState extends State<MenuPage> {
                               '\$${menu.price.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                                 color: AppColor.primaryRed,
                               ),
                             ),

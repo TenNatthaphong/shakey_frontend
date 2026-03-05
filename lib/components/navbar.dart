@@ -259,7 +259,7 @@ class _NavBarState extends State<NavBar> {
                 color: isSelected ? AppColor.primaryRed : Colors.grey.shade400,
                 fontSize: 10.0,
                 height: 1.0,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 letterSpacing: -0.2,
               ),
               maxLines: 1,

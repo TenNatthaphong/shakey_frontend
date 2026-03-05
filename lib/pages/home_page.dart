@@ -545,7 +545,7 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: scale.sp(20),
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               height: 0.95,
                             ),
                           ),
@@ -623,7 +623,7 @@ class _HomePageState extends State<HomePage> {
                           '${_user?.point ?? 0} ${_lang.get('points')}',
                           style: TextStyle(
                             color: AppColor.primaryRed,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             fontSize: scale.sp(22),
                             height: 1,
                           ),
@@ -688,7 +688,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: scale.sp(11),
                     color: const Color(0xFF8A909C),
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -780,7 +780,7 @@ class _HomePageState extends State<HomePage> {
                     label,
                     style: TextStyle(
                       color: const Color(0xFF2C2C2C),
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       fontSize: scale.sp(17),
                       letterSpacing: -0.3,
                     ),
@@ -1171,7 +1171,7 @@ class _HomePageState extends State<HomePage> {
                           '\$${order.totalPrice.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontSize: scale.sp(16),
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             color: AppColor.primaryRed,
                           ),
                         ),
@@ -1202,7 +1202,7 @@ class _HomePageState extends State<HomePage> {
               _lang.get('rewards_for_you'),
               style: TextStyle(
                 color: const Color(0xFF2F3B59),
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 fontSize: scale.sp(24),
                 height: 1,
               ),
@@ -1238,7 +1238,7 @@ class _HomePageState extends State<HomePage> {
           _lang.get('recent_order_header'),
           style: TextStyle(
             color: const Color(0xFF2F3B59),
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             fontSize: scale.sp(24),
             height: 1,
           ),
@@ -1367,7 +1367,7 @@ class _HomePageState extends State<HomePage> {
                           '${coupon.points} ${_lang.get('pts_unit')}',
                           style: TextStyle(
                             color: AppColor.primaryRed,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             fontSize: scale.sp(16),
                           ),
                         ),

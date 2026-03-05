@@ -140,7 +140,7 @@ class _MorePageState extends State<MorePage> {
                                     _user?.username ?? _lang.get('guest'),
                                     style: const TextStyle(
                                       fontSize: 24,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                           ),

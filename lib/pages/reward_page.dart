@@ -523,7 +523,7 @@ class _RewardPageState extends State<RewardPage>
                     '${reward.points} ${_lang.get('pts')}',
                     style: const TextStyle(
                       color: AppColor.primaryRed,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       fontSize: 16,
                     ),
                   ),

@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'router.dart';
 import 'package:shakey/services/auth_service.dart';
 import 'package:shakey/services/language_service.dart';
+import 'package:shakey/app_text_style.dart';
 
 const Size _fixedAppSize = Size(390, 844);
 
@@ -68,6 +69,9 @@ class _ShakeyAppState extends State<ShakeyApp> {
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: const Color(0xFFE72A53),
+        fontFamily: AppTextStyle.fontFamily,
+        fontFamilyFallback: AppTextStyle.fontFamilyFallback,
+        textTheme: AppTextStyle.textTheme,
       ),
       scrollBehavior: AppScrollBehavior(),
       onGenerateRoute: AppRouter.onGenerateRoute,
