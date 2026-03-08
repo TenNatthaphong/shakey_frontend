@@ -199,8 +199,8 @@ class _LoginPageState extends State<LoginPage> {
             final fitScale = (availableHeight / 920).clamp(0.68, 1.0);
             final imageHeight = (428.0 * fitScale).clamp(338.0, 428.0);
             final imageTop = (-6.0 * fitScale).clamp(-10.0, -4.0);
-            final imageShiftX = (36.0 * fitScale).clamp(28.0, 36.0);
-            final imageShiftY = (10.0 * fitScale).clamp(6.0, 10.0);
+            final imageShiftX = (56.0 * fitScale).clamp(48.0, 56.0);
+            final imageShiftY = (70.0 * fitScale).clamp(66.0, 70.0);
             final horizontalPadding = (constraints.maxWidth * 0.1).clamp(
               24.0,
               40.0,
@@ -220,6 +220,23 @@ class _LoginPageState extends State<LoginPage> {
                       child: Stack(
                         children: [
                           Container(color: const Color(0xFFFDF7E6)),
+                          Positioned(
+                            top: 40,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: Text(
+                                'SHAKEY',
+                                style: TextStyle(
+                                  fontFamily: 'Kanit',
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColor.primaryRed,
+                                  letterSpacing: 8,
+                                ),
+                              ),
+                            ),
+                          ),
                           Positioned(
                             top: imageTop,
                             left: 0,
