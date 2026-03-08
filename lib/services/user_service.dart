@@ -53,8 +53,8 @@ class UserService extends ChangeNotifier {
 
   Future<bool> updateProfile(Map<String, dynamic> data) async {
     try {
-      final response = await AuthService.instance.dio.post(
-        '/user/edit_profile',
+      final response = await AuthService.instance.dio.patch(
+        '/user/profile/edit',
         data: data,
       );
 
@@ -76,8 +76,8 @@ class UserService extends ChangeNotifier {
 
   Future<bool> updatePoints(int points) async {
     try {
-      final response = await AuthService.instance.dio.post(
-        '/user/update_point',
+      final response = await AuthService.instance.dio.patch(
+        '/user/point/update',
         data: {'point': points},
       );
 
@@ -94,8 +94,8 @@ class UserService extends ChangeNotifier {
 
   Future<bool> updateCups(int cups) async {
     try {
-      final response = await AuthService.instance.dio.post(
-        '/user/update_cup',
+      final response = await AuthService.instance.dio.patch(
+        '/user/cup/update',
         data: {'cups': cups},
       );
 
@@ -143,8 +143,8 @@ class UserService extends ChangeNotifier {
     String detail,
   ) async {
     try {
-      final response = await AuthService.instance.dio.post(
-        '/user/update_address',
+      final response = await AuthService.instance.dio.patch(
+        '/user/address/update',
         data: {'address_id': addressId, 'name': name, 'detail': detail},
       );
       return response.statusCode == 200 || response.statusCode == 201;
@@ -156,7 +156,7 @@ class UserService extends ChangeNotifier {
 
   Future<bool> deleteAddress(String addressId) async {
     try {
-      final response = await AuthService.instance.dio.post(
+      final response = await AuthService.instance.dio.delete(
         '/user/address/delete',
         data: {'address_id': addressId},
       );
