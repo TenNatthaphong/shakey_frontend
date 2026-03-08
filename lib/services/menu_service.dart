@@ -17,7 +17,6 @@ class MenuService extends ChangeNotifier {
         final List<dynamic> data = response.data;
         final menus = data.map((json) => Menu.fromJson(json)).toList();
 
-        // Fetch variants for each menu to support fast-add with correct ID
         return await Future.wait(
           menus.map((m) async {
             final variants = await getMenuVariants(m.id);
@@ -26,10 +25,9 @@ class MenuService extends ChangeNotifier {
         );
       }
     } catch (e) {
-      // TODO(backend): Implement real menu API
       debugPrint('Error fetching menus: $e');
     }
-    return []; // Return empty list on failure
+    return [];
   }
 
   Future<List<Topping>> getToppings() async {
@@ -57,17 +55,15 @@ class MenuService extends ChangeNotifier {
         return data.map((json) {
           return MenuSize(
             variantId: json['variant_id'] ?? '',
-            name: json['size'] ?? '', // Expecting 'S', 'M', 'L'
-            price:
-                (json['price_upsize'] as num?)?.toDouble() ??
-                0.0, // The upsize price to add
+            name: json['size'] ?? '',
+            price: (json['price_upsize'] as num?)?.toDouble() ?? 0.0,
           );
         }).toList();
       }
     } catch (e) {
       debugPrint('Error fetching menu variants: $e');
     }
-    return []; // Return empty list if fetch fails
+    return [];
   }
 
   Future<bool> createOrder(Order order) async {
