@@ -8,5 +8,4 @@ Future<void> main() async {
   await AuthService.instance.init();
   await BannerService.instance.init();
   runApp(const ShakeyApp());
-  //as
 }
