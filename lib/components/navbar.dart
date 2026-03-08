@@ -69,8 +69,8 @@ class _NavBarState extends State<NavBar> {
             borderRadius: borderRadius,
             child: BackdropFilter(
               filter: ImageFilter.blur(
-                sigmaX: 40.0,
-                sigmaY: 40.0,
+                sigmaX: 5.0,
+                sigmaY: 5.0,
               ), // Deep, creamy blur
               child: Container(
                 height: 74,
